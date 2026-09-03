@@ -305,6 +305,9 @@ def tavily_search(query):
         "regClose,est,skills,url. "
         "Use null or an empty value when fee, registration deadline, estimated "
         "footfall, skills, category, or format cannot be verified from a source. "
+        "For format, use Virtual only when the source clearly says virtual/online, "
+        "Hybrid only when clearly stated, and In-person only when the source clearly "
+        "describes a physical city/district venue or an in-person fair. "
         "Never guess Free, 0 footfall, Graduates, In-person, or a district-employment "
         "category merely to fill a field. "
         "Return source URLs as plain https URLs, never Markdown links. "
@@ -438,6 +441,61 @@ def infer_category(name, org, region, fmt):
     return ""
 
 
+
+def infer_format(name, category, org, region, url):
+    """
+    Infer an event format only when there is a strong signal.
+
+    Rules:
+    - Explicit virtual/online wording -> Virtual
+    - Explicit hybrid wording -> Hybrid
+    - Government/district Rozgar Mela / Employment Exchange style events
+      with a physical city/district location -> In-person
+    - HackerX city tech fairs -> In-person
+    - Otherwise return "" so the candidate is rejected rather than guessed.
+    """
+    text = normalize_text(" ".join([
+        str(name or ""),
+        str(category or ""),
+        str(org or ""),
+        str(region or ""),
+        str(url or ""),
+    ]))
+
+    # Strong virtual signals.
+    if any(term in text for term in (
+        "virtual", "online", "remote", "webinar"
+    )):
+        return "Virtual"
+
+    # Strong hybrid signals.
+    if "hybrid" in text:
+        return "Hybrid"
+
+    # HackerX city fairs are physical events unless explicitly marked otherwise.
+    if "hackerx" in text and any(term in text for term in (
+        "mumbai", "hyderabad", "pune", "chennai", "bengaluru",
+        "bangalore", "delhi", "gurugram", "noida"
+    )):
+        return "In-person"
+
+    # Government / district job-fair style events are typically physical
+    # when the record names a concrete district/city and is not virtual.
+    govt_job_fair_terms = (
+        "rojgar mela", "rozgar mela", "rojgaar mela", "rozgar melava",
+        "employment exchange", "district employment", "rojgar sangam",
+        "rojgaar sangam", "sewayojan", "job drive"
+    )
+
+    if any(term in text for term in govt_job_fair_terms):
+        if not any(term in text for term in (
+            "pan-india", "pan india", "all india"
+        )):
+            return "In-person"
+
+    return ""
+
+
 def clean_event(raw):
     if not isinstance(raw, dict):
         return None
@@ -541,8 +599,14 @@ def clean_event(raw):
     fmt = fmt_lookup.get(fmt.lower(), fmt)
 
     if fmt not in {"In-person", "Virtual", "Hybrid"}:
-        print(f"Rejected candidate: {name} — unknown event format: {fmt or 'blank'}")
-        return None
+        inferred_fmt = infer_format(name, category, org, region, url)
+
+        if inferred_fmt:
+            fmt = inferred_fmt
+            print(f"Format inferred: {name} → {fmt}")
+        else:
+            print(f"Rejected candidate: {name} — unknown event format: {fmt or 'blank'}")
+            return None
 
     # -----------------------------------------------------
     # Fee normalization
