@@ -318,6 +318,10 @@ const CATEGORIES = [
 const SKILLSETS = ['BE /B Tech and Post Graduate','Graduates','ITI / Diploma','10th Pass and Above','Below 10th'];
 const FROM_EMAIL = 'events@cielhrgroup.com';
 
+// ---------- GitHub Pages event catalogue ----------
+const EVENTS_JSON_URL = './events.json';
+let remoteCatalog = null;
+
 // ---------- optional shared backend ----------
 const CFG = { url:'cielhr_backend_url_v2', token:'cielhr_backend_token_v2' };
 let cfg = { url:localStorage.getItem(CFG.url)||'', token:localStorage.getItem(CFG.token)||'' };
@@ -340,8 +344,9 @@ function disconnectBackend(){
   if(pollTimer) clearInterval(pollTimer); pollTimer=null;
   cfg={url:'',token:''}; localStorage.removeItem(CFG.url); localStorage.removeItem(CFG.token);
   setConn(null,'local mode'); closeModal('backendModal');
-  // restore locally persisted state
+  // restore locally persisted state, then refresh the public event catalogue
   events=load(LS.events,null)||SEED.map(freshEvent); cands=load(LS.cands,[]); pend=load(LS.pend,[]); renderAll();
+  loadPublicEventCatalogue();
 }
 async function apiGet(){
   const r=await fetch(cfg.url+'?action=state&token='+encodeURIComponent(cfg.token));
@@ -409,9 +414,70 @@ let role  = load(LS.role, 'Super Admin');
 let assigneeEmail = load(LS.assigneeEmail, '');
 function saveAssigneeEmail(){ assigneeEmail=$('assigneeEmail').value.trim(); save(LS.assigneeEmail, assigneeEmail); }
 
+function catalogueEvent(r){
+  return freshEvent({
+    id:String(r.id||''),
+    name:r.name||'',
+    date:r.date||'',
+    region:r.region||'',
+    category:r.category||'',
+    org:r.org||'',
+    fmt:r.fmt||'In-person',
+    fee:r.fee||'On request',
+    regClose:r.regClose||'Rolling',
+    est:num(r.est),
+    skills:splitList(r.skills),
+    url:r.url||''
+  });
+}
+
+function mergeCatalogue(remote, local){
+  const localById = new Map((local||[]).map(e=>[String(e.id),e]));
+  const workflowFields = ['status','member','notifiedEmail','notifiedWa','actual','assignee_email','awaitingActual','ackSent'];
+
+  const merged = remote.map(raw=>{
+    const base = catalogueEvent(raw);
+    const prior = localById.get(String(base.id));
+    if(prior){
+      workflowFields.forEach(k=>{
+        if(prior[k] !== undefined) base[k] = prior[k];
+      });
+    }
+    return base;
+  });
+
+  const remoteIds = new Set(merged.map(e=>String(e.id)));
+  (local||[]).forEach(e=>{
+    const id=String(e.id||'');
+    if(!remoteIds.has(id) && /^e\d{10,}$/.test(id)) merged.push(e);
+  });
+
+  return merged;
+}
+
+async function loadPublicEventCatalogue(){
+  if(backendEnabled()) return false;
+  try{
+    const r = await fetch(EVENTS_JSON_URL + '?v=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data = await r.json();
+    if(!Array.isArray(data)) throw new Error('events.json must contain a JSON array');
+
+    remoteCatalog = data.map(catalogueEvent);
+    events = mergeCatalogue(data, load(LS.events, []));
+
+    save(LS.events, events);
+    renderAll();
+    return true;
+  }catch(err){
+    console.warn('Could not load events.json; using browser/seed data instead.', err);
+    return false;
+  }
+}
+
 // ---------- helpers ----------
 const $ = id => document.getElementById(id);
-const TODAY = new Date('2026-08-17');
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 function daysTo(d){ const t=Date.parse(d); if(isNaN(t)) return null; return Math.round((t-TODAY)/864e5); }
 function feeIsFree(f){ return /free|no fee|no charge/i.test(f||''); }
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -787,7 +853,12 @@ function importJSONPrompt(){
 }
 function resetSeed(){
   if(backendEnabled()){ alert('Reset is disabled while the shared backend is connected, so live Google Sheet data cannot be erased accidentally.'); return; }
-  if(!confirm('Reset events to the seeded research list? Verified community is kept.')) return; events=SEED.map(freshEvent); pend=[]; save(LS.events,events); save(LS.pend,pend); renderAll();
+  if(!confirm('Reset events to the latest research list? Verified community is kept.')) return;
+  events = (remoteCatalog && remoteCatalog.length) ? remoteCatalog.map(freshEvent) : SEED.map(freshEvent);
+  pend=[];
+  save(LS.events,events);
+  save(LS.pend,pend);
+  renderAll();
 }
 
 initSelects();
@@ -798,6 +869,7 @@ if(backendEnabled()){
   syncFromBackend().then(startPoll).catch(()=>setConn(false,'connection failed'));
 } else {
   setConn(null,'local mode');
+  loadPublicEventCatalogue();
 }
 </script>
 </body>
