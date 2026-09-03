@@ -176,7 +176,12 @@ Rules:
 """
 
     payload = {
-    "query": query,
+    "query": (
+    query
+    + " Return ONLY a JSON array of genuine upcoming India job fairs. "
+    + "Each item must contain: name,date,region,category,org,fmt,fee,"
+    + "regClose,est,skills,url. No markdown or explanation."
+),
     "search_depth": "advanced",
     "topic": "general",
     "max_results": 10,
