@@ -303,6 +303,11 @@ def tavily_search(query):
         "Each item must contain: "
         "name,date,region,category,org,fmt,fee,"
         "regClose,est,skills,url. "
+        "Use null or an empty value when fee, registration deadline, estimated "
+        "footfall, skills, category, or format cannot be verified from a source. "
+        "Never guess Free, 0 footfall, Graduates, In-person, or a district-employment "
+        "category merely to fill a field. "
+        "Return source URLs as plain https URLs, never Markdown links. "
         "No markdown or explanation."
     )
 
@@ -377,6 +382,62 @@ def extract_json_array(answer):
         return []
 
 
+
+def clean_source_url(value):
+    """
+    Convert Tavily/LLM URL output into a plain URL.
+    Also repairs accidental Markdown-link strings such as:
+    [https://example.com](https://example.com)
+    """
+    text = str(value or "").strip()
+
+    markdown_match = re.fullmatch(r"\[[^\]]+\]\((https?://[^)]+)\)", text)
+    if markdown_match:
+        text = markdown_match.group(1).strip()
+
+    plain_match = re.search(r"https?://[^\s)\]]+", text)
+    if plain_match:
+        return plain_match.group(0).rstrip(".,;")
+
+    return text
+
+
+def infer_category(name, org, region, fmt):
+    """
+    Infer only when there is a strong textual signal.
+    Never default every unknown event to District Employment Exchange Fairs.
+    """
+    text = normalize_text(" ".join([name, org, region, fmt]))
+
+    if any(term in text for term in ("hackerx", "tech job fair", "startup", "developer")):
+        return "Sector-Specific Tech & Startup Aggregators"
+
+    if any(term in text for term in ("ieee", "returning mother", "returning women", "diversity", "dei")):
+        return "Equity, Diversity & Inclusion (DEI) Foundations"
+
+    if any(term in text for term in ("naukri", "media", "publication")):
+        return "Media House & Publication Job Fairs"
+
+    if any(term in text for term in ("nielit", "sector skill council", "skill council", "bfsissc", "tssc")):
+        return "Skill Sector Councils (SSCs) Job Fairs"
+
+    if any(term in text for term in ("chamber of commerce", "industrial association", "cii", "ficci", "assocham")):
+        return "Chamber of Commerce & Industrial Association Fairs"
+
+    if any(term in text for term in ("ncs", "nsdc", "msde", "national career service")):
+        return "NSDC & MSDE Flagship Rozgar Melas"
+
+    if any(term in text for term in (
+        "rojgar mela", "rozgar mela", "rojgaar mela", "rozgar melava",
+        "employment exchange", "district employment", "sewayojan",
+        "rojgar sangam", "rojgaar sangam"
+    )):
+        return "District Employment Exchange Fairs"
+
+    # Unknown category is not enough evidence for safe auto-publishing.
+    return ""
+
+
 def clean_event(raw):
     if not isinstance(raw, dict):
         return None
@@ -388,8 +449,11 @@ def clean_event(raw):
     org = str(raw.get("org", "")).strip()
     fmt = str(raw.get("fmt", "")).strip()
     fee = str(raw.get("fee", "")).strip()
-    reg_close = str(raw.get("regClose", "")).strip()
-    url = str(raw.get("url", "")).strip()
+    reg_close = str(raw.get("regClose", "") or "").strip()
+    if normalize_text(reg_close) in {"none", "null", "unknown", "n/a", "na"}:
+        reg_close = ""
+
+    url = clean_source_url(raw.get("url", ""))
 
     # -----------------------------------------------------
     # Basic required-field validation
@@ -454,7 +518,11 @@ def clean_event(raw):
     # -----------------------------------------------------
 
     if category not in ALLOWED_CATEGORIES:
-        category = "District Employment Exchange Fairs"
+        category = infer_category(name, org, region, fmt)
+
+    if category not in ALLOWED_CATEGORIES:
+        print(f"Rejected candidate: {name} — category could not be verified.")
+        return None
 
     # -----------------------------------------------------
     # Format normalization
@@ -473,29 +541,36 @@ def clean_event(raw):
     fmt = fmt_lookup.get(fmt.lower(), fmt)
 
     if fmt not in {"In-person", "Virtual", "Hybrid"}:
-        fmt = "In-person"
+        print(f"Rejected candidate: {name} — unknown event format: {fmt or 'blank'}")
+        return None
 
     # -----------------------------------------------------
     # Fee normalization
     # -----------------------------------------------------
 
-    if fee.lower() == "free":
+    fee_text = normalize_text(fee)
+
+    if fee_text in {"free", "no fee", "no fees", "free participation", "₹0", "rs 0", "rs. 0"}:
         fee = "Free"
     else:
+        # Never infer "Free" from a missing/unclear fee.
         fee = "On request"
 
     # -----------------------------------------------------
     # Footfall normalization
     # -----------------------------------------------------
 
-    try:
-        est = int(raw.get("est", 0) or 0)
+    raw_est = raw.get("est", None)
 
-        if est < 0:
-            est = 0
-
-    except (TypeError, ValueError):
-        est = 0
+    if raw_est in (None, "", "None", "null", "unknown", "Unknown", "N/A", "n/a"):
+        est = None
+    else:
+        try:
+            est = int(str(raw_est).replace(",", "").strip())
+            if est <= 0:
+                est = None
+        except (TypeError, ValueError):
+            est = None
 
     # -----------------------------------------------------
     # Skills normalization
@@ -513,7 +588,8 @@ def clean_event(raw):
     ]
 
     if not skills:
-        skills = ["Graduates"]
+        # Do not silently label an event as graduate-only.
+        skills = []
 
     return {
         "name": name,
