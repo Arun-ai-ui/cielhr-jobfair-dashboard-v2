@@ -1,5 +1,53 @@
 [
   {
+    "id": "auto-6",
+    "name": "Rojgar Mela Meerut (Phase 1)",
+    "date": "2026-09-07",
+    "region": "Meerut, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Government of Uttar Pradesh",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 170,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-7",
+    "name": "Rojgar Mela Meerut (Phase 2)",
+    "date": "2026-09-12",
+    "region": "Meerut, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Government of Uttar Pradesh",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 990,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-8",
+    "name": "Rojgar Mela Meerut (Phase 3)",
+    "date": "2026-09-16",
+    "region": "Meerut, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Government of Uttar Pradesh",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 20,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
     "id": "e1",
     "name": "HackerX Tech Job Fair — India",
     "date": "2026-09-17",
@@ -14,6 +62,54 @@
       "BE /B Tech and Post Graduate"
     ],
     "url": "https://hackerx.org/tech-job-fairs/india/"
+  },
+  {
+    "id": "auto-9",
+    "name": "Rojgar Mela Ayodhya",
+    "date": "2026-09-18",
+    "region": "Ayodhya, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Government of Uttar Pradesh",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 250,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-10",
+    "name": "Rojgar Mela Meerut (Phase 4)",
+    "date": "2026-09-23",
+    "region": "Meerut, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Government of Uttar Pradesh",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 410,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-12",
+    "name": "IEEE Virtual Career Fair",
+    "date": "2026-09-23",
+    "region": "Virtual (India participants)",
+    "category": "District Employment Exchange Fairs",
+    "org": "IEEE",
+    "fmt": "Virtual",
+    "fee": "Free",
+    "regClose": "2026-09-15",
+    "est": 0,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://careerfair.ieee.org"
   },
   {
     "id": "e3",
@@ -51,6 +147,38 @@
     "url": "https://www.naukri.com/campus/contests/career-fair-2026"
   },
   {
+    "id": "auto-2",
+    "name": "Rojgar Mahakumbh 2026",
+    "date": "2026-10-09",
+    "region": "Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "TSSC",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2026-09-30",
+    "est": 8000,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://telcojobs.in/jobfairlist.aspx"
+  },
+  {
+    "id": "auto-3",
+    "name": "HackerX Tech Job Fair - Hyderabad",
+    "date": "2026-10-15",
+    "region": "Hyderabad, Telangana, India",
+    "category": "District Employment Exchange Fairs",
+    "org": "HackerX",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 0,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://hackerx.org/tech-job-fairs/india"
+  },
+  {
     "id": "e4",
     "name": "Career Setu BFSI Virtual Job Fair",
     "date": "2026-11-11",
@@ -66,6 +194,38 @@
       "BE /B Tech and Post Graduate"
     ],
     "url": "https://bfsissc.com/CareerSetu/"
+  },
+  {
+    "id": "auto-4",
+    "name": "HackerX Tech Job Fair - Pune",
+    "date": "2026-11-12",
+    "region": "Pune, Maharashtra, India",
+    "category": "District Employment Exchange Fairs",
+    "org": "HackerX",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 0,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://hackerx.org/tech-job-fairs/india"
+  },
+  {
+    "id": "auto-11",
+    "name": "Mega Job Drive Vizianagaram",
+    "date": "2026-11-27",
+    "region": "Vizianagaram, Andhra Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Career Center Vizianagaram (in collaboration with APSSDC, MCC, SEEDAP)",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2026-11-20",
+    "est": 0,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://www.hirist.tech/blog/a-complete-guide-to-it-job-fair-in-india"
   },
   {
     "id": "e12",
@@ -85,6 +245,22 @@
     "url": "https://ieeereturningmothers.in/career-fair-2026/"
   },
   {
+    "id": "auto-5",
+    "name": "HackerX Tech Job Fair - Chennai",
+    "date": "2026-12-17",
+    "region": "Chennai, Tamil Nadu, India",
+    "category": "District Employment Exchange Fairs",
+    "org": "HackerX",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "None",
+    "est": 0,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://hackerx.org/tech-job-fairs/india"
+  },
+  {
     "id": "e9",
     "name": "International Job Fair Bengaluru (overseas)",
     "date": "2027-04-04",
@@ -100,22 +276,6 @@
       "Graduates"
     ],
     "url": "https://bengaluruinternationaljobfair.com/"
-  },
-  {
-    "id": "auto-2",
-    "name": "Rojgar Mahakumbh 2026",
-    "date": "2026-10-09",
-    "region": "Uttar Pradesh",
-    "category": "District Employment Exchange Fairs",
-    "org": "TSSC",
-    "fmt": "In-person",
-    "fee": "Free",
-    "regClose": "2026-09-30",
-    "est": 8000,
-    "skills": [
-      "Graduates"
-    ],
-    "url": "https://telcojobs.in/jobfairlist.aspx"
   },
   {
     "id": "e5",
