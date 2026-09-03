@@ -578,8 +578,12 @@ def clean_event(raw):
 
     raw_skills = raw.get("skills", [])
 
-    if isinstance(raw_skills, str):
+    if raw_skills is None:
+        raw_skills = []
+    elif isinstance(raw_skills, str):
         raw_skills = [raw_skills]
+    elif not isinstance(raw_skills, (list, tuple, set)):
+        raw_skills = []
 
     skills = [
         skill
