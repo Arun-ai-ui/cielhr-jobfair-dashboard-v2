@@ -176,16 +176,16 @@ Rules:
 """
 
     payload = {
-        "query": query + "\n\n" + extraction_instruction,
-        "search_depth": "advanced",
-        "topic": "general",
-        "max_results": 10,
-        "include_answer": "advanced",
-        "include_raw_content": False,
-        "include_images": False,
-        "include_favicon": False,
-        "safe_search": True,
-    }
+    "query": query,
+    "search_depth": "advanced",
+    "topic": "general",
+    "max_results": 10,
+    "include_answer": "advanced",
+    "include_raw_content": False,
+    "include_images": False,
+    "include_favicon": False,
+    "safe_search": True,
+}
 
     headers = {
         "Authorization": f"Bearer {TAVILY_API_KEY}",
