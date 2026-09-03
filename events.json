@@ -1,5 +1,37 @@
 [
   {
+    "id": "auto-1",
+    "name": "Rojgar Mela 2026",
+    "date": "2026-06-09",
+    "region": "Chhattisgarh",
+    "category": "District Employment Exchange Fairs",
+    "org": "AISect India",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2026-05-30",
+    "est": 5000,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://www.facebook.com/rojgarmantraa/posts/1045322648156565"
+  },
+  {
+    "id": "auto-3",
+    "name": "Azamgarh Job Fair",
+    "date": "2026-09-03",
+    "region": "Azamgarh, Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Rojgaar Sangam",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2026-08-28",
+    "est": 3000,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
     "id": "e1",
     "name": "HackerX Tech Job Fair — India",
     "date": "2026-09-17",
@@ -14,23 +46,6 @@
       "BE /B Tech and Post Graduate"
     ],
     "url": "https://hackerx.org/tech-job-fairs/india/"
-  },
-  {
-    "id": "e2",
-    "name": "Naukri Career Fair 2026 (Virtual)",
-    "date": "2026-10-01",
-    "region": "Pan-India (Virtual)",
-    "category": "Media House & Publication Job Fairs",
-    "org": "Naukri.com",
-    "fmt": "Virtual",
-    "fee": "On request",
-    "regClose": "2026-09-25",
-    "est": 25000,
-    "skills": [
-      "BE /B Tech and Post Graduate",
-      "Graduates"
-    ],
-    "url": "https://www.naukri.com/campus/contests/career-fair-2026"
   },
   {
     "id": "e3",
@@ -51,6 +66,23 @@
     "url": "https://givelifes.com/event/the-great-chennai-job-fair-2026/"
   },
   {
+    "id": "e2",
+    "name": "Naukri Career Fair 2026 (Virtual)",
+    "date": "2026-10-01",
+    "region": "Pan-India (Virtual)",
+    "category": "Media House & Publication Job Fairs",
+    "org": "Naukri.com",
+    "fmt": "Virtual",
+    "fee": "On request",
+    "regClose": "2026-09-25",
+    "est": 25000,
+    "skills": [
+      "BE /B Tech and Post Graduate",
+      "Graduates"
+    ],
+    "url": "https://www.naukri.com/campus/contests/career-fair-2026"
+  },
+  {
     "id": "e4",
     "name": "Career Setu BFSI Virtual Job Fair",
     "date": "2026-11-11",
@@ -66,6 +98,56 @@
       "BE /B Tech and Post Graduate"
     ],
     "url": "https://bfsissc.com/CareerSetu/"
+  },
+  {
+    "id": "e12",
+    "name": "IEEE Career Fair 2026 (Returning Mothers)",
+    "date": "2026-12-05",
+    "region": "Pan-India (Virtual)",
+    "category": "Equity, Diversity & Inclusion (DEI) Foundations",
+    "org": "IEEE Industrial Engagement Committee",
+    "fmt": "Virtual",
+    "fee": "On request",
+    "regClose": "2026-11-28",
+    "est": 1500,
+    "skills": [
+      "BE /B Tech and Post Graduate",
+      "Graduates"
+    ],
+    "url": "https://ieeereturningmothers.in/career-fair-2026/"
+  },
+  {
+    "id": "e9",
+    "name": "International Job Fair Bengaluru (overseas)",
+    "date": "2027-04-04",
+    "region": "Bengaluru, Karnataka (South)",
+    "category": "NSDC & MSDE Flagship Rozgar Melas",
+    "org": "KVTSDC, Govt of Karnataka",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2027-03-20",
+    "est": 2000,
+    "skills": [
+      "ITI / Diploma",
+      "Graduates"
+    ],
+    "url": "https://bengaluruinternationaljobfair.com/"
+  },
+  {
+    "id": "auto-2",
+    "name": "Rojgar Mahakumbh 2026",
+    "date": "2026-10-09 to 2026-10-10",
+    "region": "Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "TSSC",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "2026-09-30",
+    "est": 8000,
+    "skills": [
+      "Graduates"
+    ],
+    "url": "https://telcojobs.in/jobfairlist.aspx"
   },
   {
     "id": "e5",
@@ -86,6 +168,24 @@
     "url": "https://www.ncs.gov.in/"
   },
   {
+    "id": "e10",
+    "name": "NIELIT Mega Job Fair 2026",
+    "date": "Recurring — check schedule",
+    "region": "Multi-city (North & East)",
+    "category": "Skill Sector Councils (SSCs) Job Fairs",
+    "org": "NIELIT, Govt of India",
+    "fmt": "Hybrid",
+    "fee": "Free",
+    "regClose": "Rolling",
+    "est": 2500,
+    "skills": [
+      "BE /B Tech and Post Graduate",
+      "Graduates",
+      "ITI / Diploma"
+    ],
+    "url": "https://www.nielit.gov.in/content/mega-jof-fair"
+  },
+  {
     "id": "e6",
     "name": "Bihar Rozgar Mela 2026",
     "date": "Recurring — district-wise",
@@ -102,23 +202,6 @@
       "Below 10th"
     ],
     "url": "https://www.skillupbihar.in/guides/bihar-rojgar-mela-job-fair-2026"
-  },
-  {
-    "id": "e7",
-    "name": "Maharashtra Rozgar Melava 2026",
-    "date": "Recurring — Mumbai/Pune/Thane/Nagpur",
-    "region": "Maharashtra (West)",
-    "category": "District Employment Exchange Fairs",
-    "org": "Maharashtra Skill Dev / NCS",
-    "fmt": "In-person",
-    "fee": "Free",
-    "regClose": "Rolling",
-    "est": 4000,
-    "skills": [
-      "ITI / Diploma",
-      "10th Pass and Above"
-    ],
-    "url": "https://majhinaukri.in/rojgar-melava/"
   },
   {
     "id": "e8",
@@ -139,41 +222,6 @@
     "url": "https://www.rojgarstudies.com/up-rojgar-mela-june-2026-recruitment/"
   },
   {
-    "id": "e9",
-    "name": "International Job Fair Bengaluru (overseas)",
-    "date": "2027-04-04",
-    "region": "Bengaluru, Karnataka (South)",
-    "category": "NSDC & MSDE Flagship Rozgar Melas",
-    "org": "KVTSDC, Govt of Karnataka",
-    "fmt": "In-person",
-    "fee": "Free",
-    "regClose": "2027-03-20",
-    "est": 2000,
-    "skills": [
-      "ITI / Diploma",
-      "Graduates"
-    ],
-    "url": "https://bengaluruinternationaljobfair.com/"
-  },
-  {
-    "id": "e10",
-    "name": "NIELIT Mega Job Fair 2026",
-    "date": "Recurring — check schedule",
-    "region": "Multi-city (North & East)",
-    "category": "Skill Sector Councils (SSCs) Job Fairs",
-    "org": "NIELIT, Govt of India",
-    "fmt": "Hybrid",
-    "fee": "Free",
-    "regClose": "Rolling",
-    "est": 2500,
-    "skills": [
-      "BE /B Tech and Post Graduate",
-      "Graduates",
-      "ITI / Diploma"
-    ],
-    "url": "https://www.nielit.gov.in/content/mega-jof-fair"
-  },
-  {
     "id": "e11",
     "name": "Chhattisgarh Rozgar Mela 2026",
     "date": "Recurring — district-wise",
@@ -192,20 +240,20 @@
     "url": "https://thehowpedia.com/chhattisgarh-rojgar-mela-cg-job-fair-employment/"
   },
   {
-    "id": "e12",
-    "name": "IEEE Career Fair 2026 (Returning Mothers)",
-    "date": "2026-12-05",
-    "region": "Pan-India (Virtual)",
-    "category": "Equity, Diversity & Inclusion (DEI) Foundations",
-    "org": "IEEE Industrial Engagement Committee",
-    "fmt": "Virtual",
-    "fee": "On request",
-    "regClose": "2026-11-28",
-    "est": 1500,
+    "id": "e7",
+    "name": "Maharashtra Rozgar Melava 2026",
+    "date": "Recurring — Mumbai/Pune/Thane/Nagpur",
+    "region": "Maharashtra (West)",
+    "category": "District Employment Exchange Fairs",
+    "org": "Maharashtra Skill Dev / NCS",
+    "fmt": "In-person",
+    "fee": "Free",
+    "regClose": "Rolling",
+    "est": 4000,
     "skills": [
-      "BE /B Tech and Post Graduate",
-      "Graduates"
+      "ITI / Diploma",
+      "10th Pass and Above"
     ],
-    "url": "https://ieeereturningmothers.in/career-fair-2026/"
+    "url": "https://majhinaukri.in/rojgar-melava/"
   }
 ]
