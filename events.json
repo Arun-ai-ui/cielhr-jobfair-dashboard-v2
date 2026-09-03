@@ -1,37 +1,5 @@
 [
   {
-    "id": "auto-1",
-    "name": "Rojgar Mela 2026",
-    "date": "2026-06-09",
-    "region": "Chhattisgarh",
-    "category": "District Employment Exchange Fairs",
-    "org": "AISect India",
-    "fmt": "In-person",
-    "fee": "Free",
-    "regClose": "2026-05-30",
-    "est": 5000,
-    "skills": [
-      "Graduates"
-    ],
-    "url": "https://www.facebook.com/rojgarmantraa/posts/1045322648156565"
-  },
-  {
-    "id": "auto-3",
-    "name": "Azamgarh Job Fair",
-    "date": "2026-09-03",
-    "region": "Azamgarh, Uttar Pradesh",
-    "category": "District Employment Exchange Fairs",
-    "org": "Rojgaar Sangam",
-    "fmt": "In-person",
-    "fee": "Free",
-    "regClose": "2026-08-28",
-    "est": 3000,
-    "skills": [
-      "Graduates"
-    ],
-    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
-  },
-  {
     "id": "e1",
     "name": "HackerX Tech Job Fair — India",
     "date": "2026-09-17",
@@ -136,7 +104,7 @@
   {
     "id": "auto-2",
     "name": "Rojgar Mahakumbh 2026",
-    "date": "2026-10-09 to 2026-10-10",
+    "date": "2026-10-09",
     "region": "Uttar Pradesh",
     "category": "District Employment Exchange Fairs",
     "org": "TSSC",
