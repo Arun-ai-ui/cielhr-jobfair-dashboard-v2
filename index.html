@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIEL HR — Job Fairs &amp; Candidate Events Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root { color-scheme: light; --bg:#f6f7f9; --card:#ffffff; --ink:#1a2233; --muted:#5b6576; --line:#e4e8ef; --brand:#0b5cff; --brand-d:#0846c4; --green:#128a5b; --amber:#b9770a; --red:#c0392b; --purple:#6b3fc4; --chip:#eef2fb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:13.5px; }
+.wrap { max-width:1320px; margin:0 auto; padding:18px 18px 60px; }
+header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+h1 { font-size:20px; margin:0; }
+.sub { color:var(--muted); font-size:12.5px; margin:2px 0 0; }
+.rolebar { display:flex; align-items:center; gap:8px; font-size:12.5px; }
+.rolebar b { color:var(--purple); }
+.tabs { display:flex; gap:6px; margin:16px 0 14px; flex-wrap:wrap; }
+.tab { padding:8px 14px; border:1px solid var(--line); background:var(--card); border-radius:999px; cursor:pointer; font-weight:600; color:var(--muted); }
+.tab.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+.stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+.stat .n { font-size:21px; font-weight:700; }
+.stat .l { color:var(--muted); font-size:11.5px; }
+.filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+select,input,textarea { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+input.search { min-width:200px; flex:1; }
+button { font:inherit; cursor:pointer; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:8px; padding:7px 11px; font-weight:600; }
+button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+button.primary:hover { background:var(--brand-d); }
+button.good { background:var(--green); color:#fff; border-color:var(--green); }
+button.warn { background:var(--amber); color:#fff; border-color:var(--amber); }
+button.small { padding:5px 8px; font-size:11.5px; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+table { width:100%; border-collapse:collapse; }
+th,td { text-align:left; padding:9px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); cursor:pointer; white-space:nowrap; }
+tr:hover td { background:#fafbfe; }
+.evt-name { font-weight:700; min-width:160px; }
+.evt-name a { color:var(--brand); text-decoration:none; }
+.evt-name a:hover { text-decoration:underline; }
+.chip { display:inline-block; background:var(--chip); color:var(--brand-d); border-radius:6px; padding:2px 6px; font-size:10.5px; font-weight:600; margin:1px 2px 1px 0; }
+.chip.g { background:#e6f6ee; color:var(--green); }
+.chip.a { background:#fdf2df; color:var(--amber); }
+.chip.r { background:#fbe9e7; color:var(--red); }
+.chip.n { background:#eceff4; color:var(--muted); }
+.chip.p { background:#efe8fb; color:var(--purple); }
+.fee-free { color:var(--green); font-weight:700; }
+.fee-paid { color:var(--amber); font-weight:700; }
+.assignee { color:var(--muted); font-size:11.5px; }
+.row-actions { display:flex; gap:4px; flex-wrap:wrap; }
+.muted { color:var(--muted); }
+.deadline-soon { color:var(--red); font-weight:700; }
+.note { background:#f0f5ff; border:1px solid #d3e1ff; border-radius:10px; padding:11px 13px; font-size:12.5px; color:#28406e; margin-bottom:14px; }
+.note.warnbox { background:#fff7ec; border-color:#f3dcae; color:#7a541a; }
+.modal-bg { position:fixed; inset:0; background:rgba(20,28,44,.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:50; }
+.modal-bg.show { display:flex; }
+.modal { background:#fff; border-radius:14px; max-width:600px; width:100%; max-height:90vh; overflow:auto; padding:18px; }
+.modal h3 { margin:0 0 4px; }
+.field { margin:10px 0; }
+.field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; font-weight:600; }
+.field input, .field select, .field textarea { width:100%; }
+.checks { display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; }
+.checks label { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; color:var(--ink); cursor:pointer; }
+.checks input { width:auto; }
+.right { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
+.pill-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.seg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+.hide { display:none !important; }
+.count-badge { background:var(--brand); color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; margin-left:5px; }
+.count-badge.warn { background:var(--amber); }
+.empty { text-align:center; color:var(--muted); padding:34px; }
+.legend { font-size:11.5px; color:var(--muted); margin-top:8px; }
+footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:center; }
+.dropzone { border:2px dashed var(--line); border-radius:10px; padding:16px; text-align:center; color:var(--muted); }
+.foot-num { font-weight:700; }
+.chart-wrap { position:relative; height:340px; }
+.flow { display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:11.5px; margin:6px 0 0; }
+.flow .st { padding:3px 8px; border-radius:6px; background:#eceff4; color:var(--muted); font-weight:600; }
+.flow .arw { color:var(--muted); }
+
+/* Hybrid backend connectivity (added without changing dashboard sections) */
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--muted);vertical-align:middle}
+.dot.ok{background:var(--green)} .dot.bad{background:var(--red)}
+.backend-status{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:11.5px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Job Fairs &amp; Candidate Events — CIEL HR</h1>
+      <p class="sub">Track hiring events across India · assign members · alert via Email/WhatsApp · verify footfall &amp; data · build a tagged candidate community</p>
+    </div>
+    <div class="rolebar">
+      <span>Signed in as</span>
+      <select id="role" onchange="setRole()">
+        <option>Super Admin</option>
+        <option>Assignee</option>
+      </select>
+      <input id="assigneeEmail" style="min-width:180px;padding:5px 8px;font-size:11.5px" placeholder="Assignee email (acknowledgements)" onchange="saveAssigneeEmail()">
+      <div class="pill-btns">
+        <button class="small" onclick="exportJSON()">⬇ Export</button>
+        <button class="small" onclick="importJSONPrompt()">⬆ Import</button>
+        <button class="small" onclick="resetSeed()">↺ Reset</button>
+        <button class="small" onclick="openBackendSetup()">⚙ Backend</button>
+      </div>
+      <span class="backend-status"><span class="dot" id="connDot"></span><span id="connText">local mode</span></span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="events" onclick="switchTab('events')">📅 Events</div>
+    <div class="tab" data-tab="assignments" onclick="switchTab('assignments')">👥 Assignments</div>
+    <div class="tab" data-tab="verify" onclick="switchTab('verify')">✅ Verification <span class="count-badge warn" id="verCount">0</span></div>
+    <div class="tab" data-tab="community" onclick="switchTab('community')">🗂 Community <span class="count-badge" id="commCount">0</span></div>
+    <div class="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 Footfall Analytics</div>
+  </div>
+
+  <!-- EVENTS TAB -->
+  <section id="tab-events">
+    <div class="note">
+      Event data seeded from public web research (Aug 2026). Government <b>Rozgar Mela / NCS</b> melas recur district-wise year-round; confirm exact date, venue &amp; fee via each source link. Participation fees marked <b>“On request”</b> are not publicly published — confirm with the organiser. Use <b>↺ Reset</b> anytime.
+      <div class="flow"><span class="st">New</span><span class="arw">→</span><span class="st">Assigned</span><span class="arw">→</span><span class="st">Registered</span><span class="arw">→</span><span class="st">Verification Pending</span><span class="arw">→</span><span class="st">Attended</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-total">0</div><div class="l">Events tracked</div></div>
+      <div class="stat"><div class="n" id="s-upcoming">0</div><div class="l">Registration open</div></div>
+      <div class="stat"><div class="n" id="s-free">0</div><div class="l">Free participation</div></div>
+      <div class="stat"><div class="n" id="s-assigned">0</div><div class="l">Assigned</div></div>
+      <div class="stat"><div class="n" id="s-verpend">0</div><div class="l">Verification pending</div></div>
+      <div class="stat"><div class="n" id="s-attended">0</div><div class="l">Attended</div></div>
+    </div>
+    <div class="filters">
+      <input class="search" id="q" placeholder="Search event, city, organiser…" oninput="renderEvents()">
+      <select id="fRegion" onchange="renderEvents()"><option value="">All regions</option></select>
+      <select id="fCategory" onchange="renderEvents()"><option value="">All categories</option></select>
+      <select id="fFormat" onchange="renderEvents()"><option value="">All formats</option><option>In-person</option><option>Virtual</option><option>Hybrid</option></select>
+      <select id="fFee" onchange="renderEvents()"><option value="">Any fee</option><option value="free">Free</option><option value="paid">Paid / on request</option></select>
+      <select id="fStatus" onchange="renderEvents()"><option value="">Any status</option><option>New</option><option>Assigned</option><option>Registered</option><option>Verification Pending</option><option>Attended</option></select>
+      <button class="small primary" onclick="openEventModal()">+ Add event</button>
+    </div>
+    <div class="card" style="padding:0; overflow-x:auto;">
+      <table id="evTable">
+        <thead><tr>
+          <th onclick="sortBy('date')">Job Fair Date ▾</th>
+          <th onclick="sortBy('name')">Event</th>
+          <th onclick="sortBy('region')">Location / Region</th>
+          <th onclick="sortBy('category')">Job Fair Category</th>
+          <th>Organiser</th>
+          <th>Format</th>
+          <th>Participation Fee</th>
+          <th onclick="sortBy('regClose')">Registration Deadline</th>
+          <th>Footfall (Est → Actual)</th>
+          <th>Expected Skill-sets</th>
+          <th>Assigned to</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody id="evBody"></tbody>
+      </table>
+    </div>
+    <div class="legend">Deadlines within 14 days are highlighted red. Click column headers to sort. Actions available depend on status and your role.</div>
+  </section>
+
+  <!-- ASSIGNMENTS TAB -->
+  <section id="tab-assignments" class="hide">
+    <div class="note">Events assigned to members. On assignment, an Email + WhatsApp alert is prepared from <b>events@cielhrgroup.com</b>. After the fair, the member replies on the same email thread with the registration proof, then the filled Excel; those move the event through Registered → Verification Pending → Attended.</div>
+    <div class="card" style="padding:0; overflow-x:auto;">
+      <table>
+        <thead><tr><th>Event</th><th>Date</th><th>Member (no login)</th><th>Alert</th><th>Notified</th><th>Status &amp; next step</th></tr></thead>
+        <tbody id="asgBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- VERIFICATION TAB -->
+  <section id="tab-verify" class="hide">
+    <div class="note warnbox">Data awaiting the Assignee's verification. Review the actual footfall entered and the candidate records the member submitted, then <b>Approve</b> to publish them to the community (status → Attended) or <b>Reject</b> back to the member.</div>
+    <div id="verList"></div>
+  </section>
+
+  <!-- COMMUNITY TAB -->
+  <section id="tab-community" class="hide">
+    <div class="note">Active candidate database — only <b>verified</b> records appear here. Segment by region, skill, experience, sector or tag, then launch outreach (opens pre-filled Email / WhatsApp for the filtered set).</div>
+    <div class="seg-grid">
+      <select id="cRegion" onchange="renderCommunity()"><option value="">All regions</option></select>
+      <select id="cSkill" onchange="renderCommunity()"><option value="">All skills</option></select>
+      <select id="cSector" onchange="renderCommunity()"><option value="">All sectors</option></select>
+      <select id="cExp" onchange="renderCommunity()"><option value="">Any experience</option><option value="0-2">0–2 yrs</option><option value="3-5">3–5 yrs</option><option value="6-10">6–10 yrs</option><option value="10+">10+ yrs</option></select>
+      <input id="cTag" placeholder="Filter by tag…" oninput="renderCommunity()">
+    </div>
+    <div class="filters">
+      <div class="muted" id="segSummary" style="flex:1"></div>
+      <button class="small" onclick="openUploadModal()">⬆ Manual upload (CSV)</button>
+      <button class="small primary" onclick="runCampaign('email')">✉ Email segment</button>
+      <button class="small primary" onclick="runCampaign('whatsapp')">🟢 WhatsApp segment</button>
+    </div>
+    <div class="card" style="padding:0; overflow-x:auto;">
+      <table>
+        <thead><tr><th>Name</th><th>Region</th><th>Skills</th><th>Exp</th><th>Sector</th><th>Tags</th><th>Contact</th><th>Source event</th></tr></thead>
+        <tbody id="commBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ANALYTICS TAB -->
+  <section id="tab-analytics" class="hide">
+    <div class="note">Projected vs actual footfall by job-fair category. <b>Realisation %</b> = actual ÷ estimated — higher means the category delivered more than expected. Actuals populate <b>after an event is marked Attended</b> and the Assignee replies with the footfall number on the acknowledgement email. Only events with a recorded actual count are included in realisation.</div>
+    <div class="card"><div class="chart-wrap"><canvas id="footChart"></canvas></div></div>
+    <div class="card" style="padding:0; overflow-x:auto; margin-top:12px;">
+      <table>
+        <thead><tr><th>Job Fair Category</th><th>Events</th><th>Avg estimated</th><th>Avg actual</th><th>Realisation %</th></tr></thead>
+        <tbody id="anBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Data works locally by default and can be connected to the shared Apps Script / Google Sheet backend. Email/WhatsApp workflows remain available; connected mode can use server-side email and inbound-reply automation. · CIEL HR internal tool.
+  </footer>
+</div>
+
+
+<!-- Backend connection modal -->
+<div class="modal-bg" id="backendModal">
+  <div class="modal">
+    <h3>Backend connection</h3>
+    <p class="muted">Optional: connect this dashboard to the Apps Script Web App / Google Sheet backend. Without it, the dashboard continues to work in local browser mode.</p>
+    <div class="field"><label>Web App URL (…/exec)</label><input id="cfgUrl" placeholder="https://script.google.com/macros/s/AKfy…/exec"></div>
+    <div class="field"><label>API token</label><input id="cfgToken" placeholder="Matches API_TOKEN in the Apps Script backend"></div>
+    <p class="muted" id="cfgMsg" style="font-size:11.5px"></p>
+    <div class="right"><button onclick="disconnectBackend()">Use local mode</button><button onclick="closeModal('backendModal')">Cancel</button><button class="primary" onclick="saveBackendCfg()">Connect</button></div>
+  </div>
+</div>
+
+<!-- Event add/edit modal -->
+<div class="modal-bg" id="eventModal">
+  <div class="modal">
+    <h3 id="emTitle">Add event</h3>
+    <div class="field"><label>Event name</label><input id="em_name"></div>
+    <div class="field"><label>Job Fair Date (YYYY-MM-DD or text)</label><input id="em_date" placeholder="2026-09-17"></div>
+    <div class="field"><label>Location / Region</label><input id="em_loc" placeholder="Bengaluru, Karnataka (South)"></div>
+    <div class="field"><label>Job Fair Category</label><select id="em_cat"></select></div>
+    <div class="field"><label>Organiser</label><input id="em_org"></div>
+    <div class="field"><label>Format</label><select id="em_fmt"><option>In-person</option><option>Virtual</option><option>Hybrid</option></select></div>
+    <div class="field"><label>Participation Fee (exact amount, or “Free”)</label><input id="em_fee" placeholder="Free / ₹15,000 stall / On request"></div>
+    <div class="field"><label>Registration Deadline</label><input id="em_reg" placeholder="2026-09-10"></div>
+    <div class="field"><label>Estimated footfall (projected attendees)</label><input id="em_est" type="number" placeholder="e.g. 5000"></div>
+    <div class="field"><label>Expected Skill-sets</label><div class="checks" id="em_skills"></div></div>
+    <div class="field"><label>Source link</label><input id="em_url" placeholder="https://…"></div>
+    <div class="right"><button onclick="closeModal('eventModal')">Cancel</button><button class="primary" onclick="saveEvent()">Save</button></div>
+  </div>
+</div>
+
+<!-- Assign modal -->
+<div class="modal-bg" id="assignModal">
+  <div class="modal">
+    <h3>Assign member</h3>
+    <p class="muted" id="am_evt"></p>
+    <div class="field"><label>Member name</label><input id="am_name" placeholder="e.g. Priya Nair"></div>
+    <div class="field"><label>Member email</label><input id="am_email" placeholder="priya@cielhr.com"></div>
+    <div class="field"><label>Member WhatsApp (with country code)</label><input id="am_phone" placeholder="9198XXXXXXXX"></div>
+    <p class="muted" style="font-size:11.5px">On save, status → Assigned and an Email + WhatsApp alert is prepared from events@cielhrgroup.com.</p>
+    <div class="right"><button onclick="closeModal('assignModal')">Cancel</button><button class="primary" onclick="saveAssign()">Assign &amp; alert</button></div>
+  </div>
+</div>
+
+<!-- Data received / upload modal -->
+<div class="modal-bg" id="uploadModal">
+  <div class="modal">
+    <h3 id="up_title">Record candidate data</h3>
+    <p class="muted">Attach the candidate database the member returned (or a manual file). CSV/Excel headers (case-insensitive): <b>name, email, phone, region, skills, experience, sector, tags</b>. Multiple skills/tags separated by <code>;</code> or <code>|</code>. <a href="#" onclick="downloadTemplate();return false;">Download the CSV template</a>. Actual footfall is captured separately, after the event is marked Attended.</p>
+    <div class="field"><label>Source event</label><select id="up_event"></select></div>
+    <div class="field"><div class="dropzone"><input type="file" id="up_file" accept=".csv"><p class="muted" style="margin:8px 0 0">or paste CSV below</p></div></div>
+    <div class="field"><label>Paste CSV</label><textarea id="up_text" rows="5" placeholder="name,email,phone,region,skills,experience,sector,tags&#10;Asha R,asha@x.com,9199...,Chennai (South),Java;Spring,4,IT,Immediate joiner"></textarea></div>
+    <p class="muted" id="up_hint" style="font-size:11.5px"></p>
+    <div class="right"><button onclick="closeModal('uploadModal')">Cancel</button><button class="primary" onclick="doUpload()">Submit for verification</button></div>
+  </div>
+</div>
+
+<!-- Verify modal -->
+<div class="modal-bg" id="verifyModal">
+  <div class="modal">
+    <h3>Verify submission</h3>
+    <p class="muted" id="vf_evt"></p>
+    <div id="vf_body"></div>
+    <div class="right"><button onclick="closeModal('verifyModal')">Close</button><button class="warn" onclick="rejectData()">Reject</button><button class="good" onclick="approveData()">Approve → Attended</button></div>
+  </div>
+</div>
+
+<!-- Actual footfall modal -->
+<div class="modal-bg" id="actualModal">
+  <div class="modal">
+    <h3>Update actual footfall</h3>
+    <p class="muted" id="ac_evt"></p>
+    <p class="muted" style="font-size:11.5px">Enter the number the Assignee replied with on the acknowledgement email sent after this event was marked Attended. When the Gmail connector is wired to events@cielhrgroup.com, this field updates automatically from that reply.</p>
+    <div class="field"><label>Actual footfall (attendees)</label><input id="ac_val" type="number" placeholder="e.g. 4200"></div>
+    <div class="right"><button onclick="closeModal('actualModal')">Cancel</button><button class="small" onclick="ackEmail(actualId)">Re-send acknowledgement</button><button class="primary" onclick="saveActual()">Save</button></div>
+  </div>
+</div>
+
+<script>
+// ---------- reference data ----------
+const CATEGORIES = [
+  'NSDC & MSDE Flagship Rozgar Melas',
+  'District Employment Exchange Fairs',
+  'Skill Sector Councils (SSCs) Job Fairs',
+  'Political Parties & MLA/MP Sponsored Job Fairs',
+  'Chamber of Commerce & Industrial Association Fairs',
+  'Media House & Publication Job Fairs',
+  'Sector-Specific Tech & Startup Aggregators',
+  'Equity, Diversity & Inclusion (DEI) Foundations',
+  'Defense & Veteran Resettlement Fairs'
+];
+const SKILLSETS = ['BE /B Tech and Post Graduate','Graduates','ITI / Diploma','10th Pass and Above','Below 10th'];
+const FROM_EMAIL = 'events@cielhrgroup.com';
+
+// ---------- optional shared backend ----------
+const CFG = { url:'cielhr_backend_url_v2', token:'cielhr_backend_token_v2' };
+let cfg = { url:localStorage.getItem(CFG.url)||'', token:localStorage.getItem(CFG.token)||'' };
+let pollTimer = null;
+const backendEnabled = () => !!(cfg.url && cfg.token);
+function setConn(ok, text){
+  const d=$('connDot'), t=$('connText'); if(!d||!t) return;
+  d.className='dot'+(ok===true?' ok':ok===false?' bad':''); t.textContent=text;
+}
+function openBackendSetup(){ $('cfgUrl').value=cfg.url; $('cfgToken').value=cfg.token; $('cfgMsg').textContent=''; show('backendModal'); }
+async function saveBackendCfg(){
+  const url=$('cfgUrl').value.trim(), token=$('cfgToken').value.trim();
+  if(!url||!token){ $('cfgMsg').textContent='Both fields are required.'; return; }
+  cfg={url,token}; localStorage.setItem(CFG.url,url); localStorage.setItem(CFG.token,token);
+  $('cfgMsg').textContent='Connecting…';
+  try{ await syncFromBackend(); closeModal('backendModal'); startPoll(); }
+  catch(e){ setConn(false,'connection failed'); $('cfgMsg').textContent='Could not connect: '+e.message; }
+}
+function disconnectBackend(){
+  if(pollTimer) clearInterval(pollTimer); pollTimer=null;
+  cfg={url:'',token:''}; localStorage.removeItem(CFG.url); localStorage.removeItem(CFG.token);
+  setConn(null,'local mode'); closeModal('backendModal');
+  // restore locally persisted state
+  events=load(LS.events,null)||SEED.map(freshEvent); cands=load(LS.cands,[]); pend=load(LS.pend,[]); renderAll();
+}
+async function apiGet(){
+  const r=await fetch(cfg.url+'?action=state&token='+encodeURIComponent(cfg.token));
+  if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+}
+async function apiPost(action,payload){
+  const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token,action,payload})});
+  if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+}
+const num=x=>{ const n=parseFloat(x); return isNaN(n)?null:n; };
+const splitList=x=>Array.isArray(x)?x:String(x==null?'':x).split(/[;|]/).map(s=>s.trim()).filter(Boolean);
+const truthy=x=>x===true||String(x).toLowerCase()==='true'||String(x)==='1';
+function toEvent(r){ return {
+  id:String(r.id), name:r.name, date:r.date, region:r.region, category:r.category, org:r.org, fmt:r.fmt, fee:r.fee,
+  regClose:r.regClose, est:num(r.est), actual:(r.actual===''||r.actual==null)?null:num(r.actual), skills:splitList(r.skills),
+  url:r.url, status:r.status||'New', member:(r.member_name||r.member_email||r.member_phone)?{name:r.member_name,email:r.member_email,phone:r.member_phone}:null,
+  assignee_email:r.assignee_email||'', notifiedEmail:truthy(r.notified_email||r.notifiedEmail), notifiedWa:truthy(r.notified_wa||r.notifiedWa),
+  awaitingActual:truthy(r.awaiting_actual||r.awaitingActual), ackSent:truthy(r.ack_sent||r.ackSent)
+}; }
+function toCand(r){ return { id:r.id||('c'+Math.random().toString(36).slice(2)), name:r.name, email:r.email, phone:r.phone, region:r.region, skills:splitList(r.skills), exp:num(r.experience??r.exp)||0, sector:r.sector, tags:splitList(r.tags), source:r.source||'', eventId:String(r.event_id??r.eventId??'') }; }
+function applyState(st){
+  if(st && st.error) throw new Error(st.error);
+  events=(st.events||[]).map(toEvent); cands=(st.community||st.cands||[]).map(toCand); pend=(st.pending||st.pend||[]).map(toCand);
+}
+async function syncFromBackend(){
+  if(!backendEnabled()) return false; setConn(null,'connecting…');
+  const st=await apiGet(); applyState(st); setConn(true,'connected'); renderAll(); return true;
+}
+function startPoll(){ if(pollTimer) clearInterval(pollTimer); if(backendEnabled()) pollTimer=setInterval(()=>syncFromBackend().catch(()=>setConn(false,'offline')),45000); }
+async function commit(action,payload){
+  if(!backendEnabled()) return null;
+  setConn(null,'saving…');
+  const st=await apiPost(action,payload); applyState(st); setConn(true,'connected'); renderAll(); return st;
+}
+function saveLocalState(){ save(LS.events,events); save(LS.cands,cands); save(LS.pend,pend); }
+
+
+// ---------- storage ----------
+const LS = { events:'cielhr_events_v2', cands:'cielhr_cands_v2', pend:'cielhr_pend_v2', role:'cielhr_role_v2', assigneeEmail:'cielhr_asgemail_v2' };
+function load(k, fb){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):fb; }catch(e){ return fb; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+// ---------- seed events ----------
+const SEED = [
+  {id:'e1', name:'HackerX Tech Job Fair — India', date:'2026-09-17', region:'Bengaluru / Metro (South)', category:'Sector-Specific Tech & Startup Aggregators', org:'HackerX', fmt:'In-person', fee:'On request', regClose:'2026-09-10', est:300, skills:['BE /B Tech and Post Graduate'], url:'https://hackerx.org/tech-job-fairs/india/'},
+  {id:'e2', name:'Naukri Career Fair 2026 (Virtual)', date:'2026-10-01', region:'Pan-India (Virtual)', category:'Media House & Publication Job Fairs', org:'Naukri.com', fmt:'Virtual', fee:'On request', regClose:'2026-09-25', est:25000, skills:['BE /B Tech and Post Graduate','Graduates'], url:'https://www.naukri.com/campus/contests/career-fair-2026'},
+  {id:'e3', name:'The Great Chennai Job Fair 2026', date:'2026-09-27', region:'Chennai, Tamil Nadu (South)', category:'Chamber of Commerce & Industrial Association Fairs', org:'Give Life / partners', fmt:'In-person', fee:'Free', regClose:'2026-09-20', est:25000, skills:['Graduates','ITI / Diploma','10th Pass and Above'], url:'https://givelifes.com/event/the-great-chennai-job-fair-2026/'},
+  {id:'e4', name:'Career Setu BFSI Virtual Job Fair', date:'2026-11-11', region:'Pan-India, 20+ states (Virtual)', category:'Skill Sector Councils (SSCs) Job Fairs', org:'BFSI Sector Skill Council', fmt:'Virtual', fee:'Free', regClose:'2026-11-08', est:15000, skills:['Graduates','BE /B Tech and Post Graduate'], url:'https://bfsissc.com/CareerSetu/'},
+  {id:'e5', name:'NCS Employment Fair (Rozgar Sangam)', date:'Recurring — check portal', region:'Pan-India, district-wise (all zones)', category:'NSDC & MSDE Flagship Rozgar Melas', org:'National Career Service, Govt of India', fmt:'Hybrid', fee:'Free', regClose:'Rolling', est:5000, skills:['Graduates','ITI / Diploma','10th Pass and Above'], url:'https://www.ncs.gov.in/'},
+  {id:'e6', name:'Bihar Rozgar Mela 2026', date:'Recurring — district-wise', region:'Bihar (East)', category:'District Employment Exchange Fairs', org:'Bihar Labour Dept / NCS', fmt:'In-person', fee:'Free', regClose:'Rolling', est:3000, skills:['ITI / Diploma','10th Pass and Above','Below 10th'], url:'https://www.skillupbihar.in/guides/bihar-rojgar-mela-job-fair-2026'},
+  {id:'e7', name:'Maharashtra Rozgar Melava 2026', date:'Recurring — Mumbai/Pune/Thane/Nagpur', region:'Maharashtra (West)', category:'District Employment Exchange Fairs', org:'Maharashtra Skill Dev / NCS', fmt:'In-person', fee:'Free', regClose:'Rolling', est:4000, skills:['ITI / Diploma','10th Pass and Above'], url:'https://majhinaukri.in/rojgar-melava/'},
+  {id:'e8', name:'UP Rozgar Mela 2026', date:'Recurring — district-wise', region:'Uttar Pradesh (North)', category:'District Employment Exchange Fairs', org:'Sewayojan / Rojgar Sangam UP', fmt:'In-person', fee:'Free', regClose:'Rolling', est:3500, skills:['Graduates','ITI / Diploma','10th Pass and Above'], url:'https://www.rojgarstudies.com/up-rojgar-mela-june-2026-recruitment/'},
+  {id:'e9', name:'International Job Fair Bengaluru (overseas)', date:'2027-04-04', region:'Bengaluru, Karnataka (South)', category:'NSDC & MSDE Flagship Rozgar Melas', org:'KVTSDC, Govt of Karnataka', fmt:'In-person', fee:'Free', regClose:'2027-03-20', est:2000, skills:['ITI / Diploma','Graduates'], url:'https://bengaluruinternationaljobfair.com/'},
+  {id:'e10', name:'NIELIT Mega Job Fair 2026', date:'Recurring — check schedule', region:'Multi-city (North & East)', category:'Skill Sector Councils (SSCs) Job Fairs', org:'NIELIT, Govt of India', fmt:'Hybrid', fee:'Free', regClose:'Rolling', est:2500, skills:['BE /B Tech and Post Graduate','Graduates','ITI / Diploma'], url:'https://www.nielit.gov.in/content/mega-jof-fair'},
+  {id:'e11', name:'Chhattisgarh Rozgar Mela 2026', date:'Recurring — district-wise', region:'Chhattisgarh (Central)', category:'District Employment Exchange Fairs', org:'CG Employment Dept', fmt:'In-person', fee:'Free', regClose:'Rolling', est:2000, skills:['10th Pass and Above','Below 10th','ITI / Diploma'], url:'https://thehowpedia.com/chhattisgarh-rojgar-mela-cg-job-fair-employment/'},
+  {id:'e12', name:'IEEE Career Fair 2026 (Returning Mothers)', date:'2026-12-05', region:'Pan-India (Virtual)', category:'Equity, Diversity & Inclusion (DEI) Foundations', org:'IEEE Industrial Engagement Committee', fmt:'Virtual', fee:'On request', regClose:'2026-11-28', est:1500, skills:['BE /B Tech and Post Graduate','Graduates'], url:'https://ieeereturningmothers.in/career-fair-2026/'}
+];
+function freshEvent(e){ return {...e, status:'New', member:null, notifiedEmail:false, notifiedWa:false, actual:null}; }
+
+let events = load(LS.events, null);
+if(!events){ events = SEED.map(freshEvent); save(LS.events, events); }
+let cands = load(LS.cands, []);      // verified community
+let pend  = load(LS.pend, []);       // staged, awaiting verification
+let role  = load(LS.role, 'Super Admin');
+let assigneeEmail = load(LS.assigneeEmail, '');
+function saveAssigneeEmail(){ assigneeEmail=$('assigneeEmail').value.trim(); save(LS.assigneeEmail, assigneeEmail); }
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const TODAY = new Date('2026-08-17');
+function daysTo(d){ const t=Date.parse(d); if(isNaN(t)) return null; return Math.round((t-TODAY)/864e5); }
+function feeIsFree(f){ return /free|no fee|no charge/i.test(f||''); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function regOpen(e){ if(!e.regClose||/rolling/i.test(e.regClose)) return true; const dt=daysTo(e.regClose); return dt===null?true:dt>=0; }
+function fmtNum(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('en-IN'); }
+let sortKey='date', sortDir=1;
+
+// ---------- role ----------
+function setRole(){ role=$('role').value; save(LS.role, role); renderAll(); }
+function canDelete(){ return role==='Super Admin'; }
+
+// ---------- init selects ----------
+function initSelects(){
+  $('role').value = role;
+  $('assigneeEmail').value = assigneeEmail;
+  const cat=$('em_cat'); cat.innerHTML=CATEGORIES.map(c=>`<option>${esc(c)}</option>`).join('');
+  $('fCategory').innerHTML='<option value="">All categories</option>'+CATEGORIES.map(c=>`<option>${esc(c)}</option>`).join('');
+  $('em_skills').innerHTML=SKILLSETS.map((s,i)=>`<label><input type="checkbox" value="${esc(s)}" id="emsk${i}">${esc(s)}</label>`).join('');
+}
+
+// ---------- events render ----------
+function refreshFilters(){
+  const regions=[...new Set(events.map(e=>e.region))].sort();
+  const sel=$('fRegion'), cur=sel.value;
+  sel.innerHTML='<option value="">All regions</option>'+regions.map(r=>`<option ${r===cur?'selected':''}>${esc(r)}</option>`).join('');
+}
+function statusChip(s){ const m={New:'n',Assigned:'a',Registered:'p','Verification Pending':'r',Attended:'g'}; return `<span class="chip ${m[s]||'n'}">${esc(s)}</span>`; }
+function skillChips(arr){ return (arr||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join(''); }
+
+function renderEvents(){
+  refreshFilters();
+  const q=$('q').value.toLowerCase(), fR=$('fRegion').value, fC=$('fCategory').value, fF=$('fFormat').value, fFee=$('fFee').value, fS=$('fStatus').value;
+  let rows=events.filter(e=>{
+    if(q && !(e.name+e.region+e.org+e.category).toLowerCase().includes(q)) return false;
+    if(fR && e.region!==fR) return false;
+    if(fC && e.category!==fC) return false;
+    if(fF && e.fmt!==fF) return false;
+    if(fFee==='free' && !feeIsFree(e.fee)) return false;
+    if(fFee==='paid' && feeIsFree(e.fee)) return false;
+    if(fS && e.status!==fS) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{ let x=a[sortKey]||'', y=b[sortKey]||''; return (x>y?1:x<y?-1:0)*sortDir; });
+  const b=$('evBody');
+  b.innerHTML = rows.length? rows.map(e=>{
+    const dd=daysTo(e.regClose);
+    const regCls = (dd!==null && dd>=0 && dd<=14)?'deadline-soon':'';
+    const feeCls = feeIsFree(e.fee)?'fee-free':'fee-paid';
+    return `<tr>
+      <td>${esc(e.date)}</td>
+      <td class="evt-name">${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a>`:esc(e.name)}</td>
+      <td>${esc(e.region)}</td>
+      <td><span class="chip p">${esc(e.category)}</span></td>
+      <td>${esc(e.org)}</td>
+      <td><span class="chip n">${esc(e.fmt)}</span></td>
+      <td class="${feeCls}">${esc(e.fee)}</td>
+      <td class="${regCls}">${esc(e.regClose)}${dd!==null&&dd>=0&&dd<=14?` (${dd}d)`:''}</td>
+      <td><span class="foot-num">${fmtNum(e.est)}</span> → <span class="foot-num" style="color:${e.actual!=null?'var(--green)':'var(--muted)'}">${fmtNum(e.actual)}</span></td>
+      <td>${skillChips(e.skills)}</td>
+      <td class="assignee">${e.member?esc(e.member.name):'<span class="muted">—</span>'}</td>
+      <td>${statusChip(e.status)}</td>
+      <td><div class="row-actions">${actionsFor(e)}</div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="13" class="empty">No events match your filters.</td></tr>`;
+  updateStats();
+}
+function actionsFor(e){
+  let b='';
+  if(e.status==='New') b+=`<button class="small primary" onclick="openAssign('${e.id}')">Assign</button>`;
+  if(e.status==='Assigned') b+=`<button class="small" onclick="reAlert('${e.id}')">Re-alert</button><button class="small primary" onclick="markRegistered('${e.id}')">Reg. received</button>`;
+  if(e.status==='Registered') b+=`<button class="small" onclick="sendTemplate('${e.id}')">✉ Send template</button><button class="small primary" onclick="openUploadModal('${e.id}')">Data received</button>`;
+  if(e.status==='Verification Pending') b+=`<button class="small warn" onclick="openVerify('${e.id}')">Verify</button>`;
+  if(e.status==='Attended'){
+    b+=`<button class="small" onclick="openVerify('${e.id}',true)">View data</button>`;
+    b+= e.actual==null ? `<button class="small primary" onclick="openActual('${e.id}')">Update actual footfall</button>` : `<button class="small" onclick="openActual('${e.id}')">Edit footfall</button>`;
+  }
+  if(canDelete()) b+=`<button class="small" onclick="delEvent('${e.id}')">🗑</button>`;
+  return b;
+}
+function updateStats(){
+  $('s-total').textContent=events.length;
+  $('s-upcoming').textContent=events.filter(regOpen).length;
+  $('s-free').textContent=events.filter(e=>feeIsFree(e.fee)).length;
+  $('s-assigned').textContent=events.filter(e=>e.member).length;
+  $('s-verpend').textContent=events.filter(e=>e.status==='Verification Pending').length;
+  $('s-attended').textContent=events.filter(e=>e.status==='Attended').length;
+  $('commCount').textContent=cands.length;
+  $('verCount').textContent=events.filter(e=>e.status==='Verification Pending').length;
+}
+function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=1;} renderEvents(); }
+function delEvent(id){
+  if(!confirm('Delete this event?')) return;
+  if(backendEnabled()){ commit('event.delete',{id}).catch(e=>{setConn(false,'save failed');alert('Delete failed: '+e.message);}); return; }
+  events=events.filter(e=>e.id!==id); save(LS.events,events); renderEvents();
+}
+
+// ---------- event modal ----------
+let editId=null;
+function openEventModal(){ editId=null; $('emTitle').textContent='Add event'; ['name','date','loc','org','fee','reg','url','est'].forEach(f=>$('em_'+f).value=''); $('em_fmt').value='In-person'; $('em_cat').value=CATEGORIES[0]; SKILLSETS.forEach((s,i)=>$('emsk'+i).checked=false); show('eventModal'); }
+function saveEvent(){
+  const skills=SKILLSETS.filter((x,i)=>$('emsk'+i).checked);
+  const ev={ id:editId||('e'+Date.now()), name:$('em_name').value.trim(), date:$('em_date').value.trim(), region:$('em_loc').value.trim(), category:$('em_cat').value, org:$('em_org').value.trim(), fmt:$('em_fmt').value, fee:$('em_fee').value.trim()||'On request', regClose:$('em_reg').value.trim()||'Rolling', est:parseInt($('em_est').value)||null, skills, url:$('em_url').value.trim() };
+  if(!ev.name){ alert('Event name required'); return; }
+  closeModal('eventModal');
+  if(backendEnabled()){
+    const payload={...ev,skills:skills.join(';')}; delete payload.id;
+    commit('event.create',{event:payload}).catch(e=>{setConn(false,'save failed');alert('Could not save event: '+e.message);}); return;
+  }
+  ev.status='New'; ev.member=null; ev.notifiedEmail=false; ev.notifiedWa=false; ev.actual=null;
+  events.push(ev); save(LS.events,events); renderEvents();
+}
+
+// ---------- assign ----------
+let assignId=null;
+function openAssign(id){ assignId=id; const e=events.find(x=>x.id===id); $('am_evt').textContent=e.name; const a=e.member||{}; $('am_name').value=a.name||''; $('am_email').value=a.email||''; $('am_phone').value=a.phone||''; show('assignModal'); }
+async function saveAssign(){
+  const e=events.find(x=>x.id===assignId);
+  const m={ name:$('am_name').value.trim(), email:$('am_email').value.trim(), phone:$('am_phone').value.trim() };
+  if(!m.name){ alert('Member name required'); return; }
+  closeModal('assignModal');
+  if(backendEnabled()){
+    try{
+      await commit('event.assign',{id:assignId,member_name:m.name,member_email:m.email,member_phone:m.phone,assignee_email:assigneeEmail});
+      alert('Assigned successfully. The connected backend now owns the assignment/email workflow.'); switchTab('assignments');
+    }catch(err){ setConn(false,'save failed'); alert('Assignment failed: '+err.message); }
+    return;
+  }
+  e.member=m; e.status='Assigned'; save(LS.events,events); renderAll();
+  alertEmail(e.id,true); alert('Assigned. Email draft opened from '+FROM_EMAIL+'. Open the Assignments tab to also send the WhatsApp alert.'); switchTab('assignments');
+}
+
+// ---------- alerts ----------
+function alertEmail(id, silent){
+  const e=events.find(x=>x.id===id); const a=e&&e.member;
+  if(!a||!a.email){ if(!silent) alert('Add member email first (Assign).'); return; }
+  if(backendEnabled()){
+    commit('event.realert',{id}).then(()=>{ if(!silent) alert('Email alert sent through the connected backend.'); }).catch(err=>alert('Email alert failed: '+err.message)); return;
+  }
+  const subj=`[CIEL HR] Please attend: ${e.name} (${e.date})`;
+  const body=`Hi ${a.name},\n\nYou are assigned to represent CIEL HR at this hiring event:\n\nEvent: ${e.name}\nDate: ${e.date}\nLocation: ${e.region}\nCategory: ${e.category}\nFormat: ${e.fmt}\nOrganiser: ${e.org}\nParticipation fee: ${e.fee}\nRegister by: ${e.regClose}\nEstimated footfall: ${fmtNum(e.est)}\nExpected skill-sets: ${(e.skills||[]).join(', ')}\nDetails: ${e.url}\n\nNEXT STEPS (reply on THIS email thread):\n1. After registering, reply with a screenshot / copy of the registration form.\n2. We will then send you the Excel data template.\n3. After the fair, reply with the filled Excel of candidates and the actual attendee count.\n\nRegards,\nCIEL HR Events Team\n${FROM_EMAIL}`;
+  window.open(`mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank');
+  e.notifiedEmail=true; save(LS.events,events); renderAssignments();
+}
+function alertWa(id){
+  const e=events.find(x=>x.id===id); const a=e&&e.member; if(!a||!a.phone){ alert('Add member WhatsApp number first (Assign).'); return; }
+  const msg=`*CIEL HR — Job fair assignment*\n${e.name}\n📅 ${e.date}  📍 ${e.region}\n🏷 ${e.category} · ${e.fmt}\n💳 Fee: ${e.fee}\n📝 Register by ${e.regClose}\n👥 Est. footfall: ${fmtNum(e.est)}\n🔗 ${e.url}\n\nReply on the email thread from ${FROM_EMAIL} with your registration proof, then the filled data template after the fair.`;
+  window.open(`https://wa.me/${a.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
+  e.notifiedWa=true; if(!backendEnabled()) save(LS.events,events); renderAssignments();
+}
+function reAlert(id){ alertEmail(id); }
+
+// ---------- status transitions ----------
+function markRegistered(id){
+  if(backendEnabled()){
+    commit('event.markRegistered',{id}).catch(err=>alert('Could not update registration status: '+err.message)); return;
+  }
+  const e=events.find(x=>x.id===id); e.status='Registered'; save(LS.events,events); renderAll();
+  if(confirm('Registration proof received on the email thread. Send the Excel upload template to '+(e.member?e.member.email:'the member')+' now?')) sendTemplate(id);
+}
+function sendTemplate(id){
+  const e=events.find(x=>x.id===id); const a=e.member||{};
+  const subj=`[CIEL HR] Data template — ${e.name}`;
+  const body=`Hi ${a.name||''},\n\nThanks for registering for ${e.name}. Please collect candidate details at the fair and return them using the attached CIEL HR Excel template.\n\nColumns: name, email, phone, region, skills, experience, sector, tags.\nAlso reply with the ACTUAL number of attendees you observed.\n\nReply with the filled Excel on this same thread — it will be queued for verification.\n\nRegards,\nCIEL HR Events Team\n${FROM_EMAIL}`;
+  window.open(`mailto:${encodeURIComponent(a.email||'')}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank');
+  downloadTemplate();
+}
+
+// ---------- upload (data received / manual) ----------
+let manualMode=false;
+function openUploadModal(preId){
+  manualMode = (preId===undefined);
+  const sel=$('up_event');
+  const list = manualMode ? events : events.filter(e=>e.status==='Registered'||e.status==='Verification Pending'||e.id===preId);
+  sel.innerHTML=(list.length?list:events).map(e=>`<option value="${e.id}" ${e.id===preId?'selected':''}>${esc(e.name)}</option>`).join('');
+  $('up_title').textContent = manualMode ? 'Manual data upload' : 'Record candidate data';
+  $('up_hint').textContent = 'On submit, records are staged for the Assignee to verify before entering the community.';
+  $('up_text').value=''; $('up_file').value='';
+  show('uploadModal');
+}
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2) return [];
+  const split=l=>{ const out=[]; let cur='',q=false; for(const ch of l){ if(ch==='"'){q=!q;} else if(ch===','&&!q){out.push(cur);cur='';} else cur+=ch; } out.push(cur); return out.map(s=>s.trim()); };
+  const heads=split(lines[0]).map(h=>h.toLowerCase());
+  const idx=n=>heads.findIndex(h=>h.includes(n));
+  const iName=idx('name'),iEmail=idx('email'),iPhone=idx('phone'),iReg=idx('region'),iSkill=idx('skill'),iExp=idx('exp'),iSec=idx('sector'),iTag=idx('tag');
+  return lines.slice(1).map(l=>{ const c=split(l); const g=i=>i>=0?(c[i]||''):''; return {
+    name:g(iName), email:g(iEmail), phone:g(iPhone), region:g(iReg),
+    skills:g(iSkill).split(/[;|]/).map(s=>s.trim()).filter(Boolean),
+    exp:parseFloat(g(iExp))||0, sector:g(iSec),
+    tags:g(iTag).split(/[;|]/).map(s=>s.trim()).filter(Boolean)
+  };}).filter(r=>r.name);
+}
+function doUpload(){
+  const evId=$('up_event').value; const ev=events.find(e=>e.id===evId); const text=$('up_text').value.trim();
+  const finish=async raw=>{
+    const parsed=parseCSV(raw); if(!parsed.length){ alert('No valid rows found. Ensure headers include at least "name".'); return; }
+    closeModal('uploadModal');
+    if(backendEnabled()){
+      try{ await commit('candidates.stage',{eventId:evId,rows:parsed}); alert(parsed.length+' records staged for verification.'); }
+      catch(err){ alert('Candidate upload failed: '+err.message); }
+      return;
+    }
+    parsed.forEach(p=>{ p.id='c'+Date.now()+Math.random().toString(36).slice(2,6); p.source=ev?ev.name:'—'; p.eventId=evId; pend.push(p); });
+    ev.status='Verification Pending'; save(LS.pend,pend); save(LS.events,events); renderAll(); alert(parsed.length+' records staged for verification (event → Verification Pending).');
+  };
+  const file=$('up_file').files[0]; if(file){ const r=new FileReader(); r.onload=()=>finish(r.result); r.readAsText(file); } else if(text){ finish(text); } else alert('Choose a CSV file or paste CSV text.');
+}
+function downloadTemplate(){
+  const csv='name,email,phone,region,skills,experience,sector,tags\nAsha R,asha@example.com,919900000000,Chennai (South),Java;Spring Boot,4,IT,Immediate joiner;Relocate\n';
+  const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='CIEL-HR-candidate-upload-template.csv'; a.click();
+}
+
+// ---------- assignments tab ----------
+function renderAssignments(){
+  const rows=events.filter(e=>e.member);
+  const nextStep={New:'—',Assigned:'Await registration proof → mark “Reg. received”',Registered:'Send template → collect data → “Data received”','Verification Pending':'Assignee to verify in Verification tab',Attended:'Reply to acknowledgement with actual footfall → update field'};
+  $('asgBody').innerHTML = rows.length? rows.map(e=>{
+    const a=e.member;
+    return `<tr>
+      <td class="evt-name">${esc(e.name)}</td>
+      <td>${esc(e.date)}</td>
+      <td>${esc(a.name)}<br><span class="muted">${esc(a.email||'')} ${a.phone?'· '+esc(a.phone):''}</span></td>
+      <td class="row-actions">
+        <button class="small" onclick="alertEmail('${e.id}')">✉ Email</button>
+        <button class="small" onclick="alertWa('${e.id}')">🟢 WhatsApp</button>
+      </td>
+      <td>${e.notifiedEmail?'<span class="chip g">Email ✓</span>':''}${e.notifiedWa?'<span class="chip g">WA ✓</span>':''}${!e.notifiedEmail&&!e.notifiedWa?'<span class="muted">—</span>':''}</td>
+      <td>${statusChip(e.status)}<div class="muted" style="font-size:11px;margin-top:3px">${esc(nextStep[e.status]||'')}</div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="empty">No members assigned yet. Assign from the Events tab.</td></tr>`;
+  updateStats();
+}
+
+// ---------- verification tab ----------
+function renderVerify(){
+  const rows=events.filter(e=>e.status==='Verification Pending');
+  $('verList').innerHTML = rows.length? rows.map(e=>{
+    const staged=pend.filter(p=>p.eventId===e.id);
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div><b>${esc(e.name)}</b> <span class="muted">· ${esc(e.category)}</span><br>
+        <span class="muted" style="font-size:12px">Member: ${e.member?esc(e.member.name):'—'} · Estimated footfall ${fmtNum(e.est)} · ${staged.length} candidate records (actual footfall captured after approval)</span></div>
+        <div class="row-actions"><button class="small warn" onclick="openVerify('${e.id}')">Review &amp; verify</button></div>
+      </div></div>`;
+  }).join('') : `<div class="empty">Nothing awaiting verification.</div>`;
+}
+let verifyId=null;
+function openVerify(id, readOnly){
+  verifyId=id; const e=events.find(x=>x.id===id);
+  const staged=(e.status==='Attended') ? cands.filter(c=>c.eventId===id) : pend.filter(p=>p.eventId===id);
+  $('vf_evt').innerHTML=`<b>${esc(e.name)}</b> — estimated ${fmtNum(e.est)} vs actual <b>${fmtNum(e.actual)}</b> · ${staged.length} records`;
+  $('vf_body').innerHTML = staged.length? `<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Region</th><th>Skills</th><th>Exp</th><th>Sector</th><th>Tags</th></tr></thead><tbody>`+
+    staged.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.region)}</td><td>${skillChips(c.skills)}</td><td>${c.exp} yr</td><td>${esc(c.sector)}</td><td>${(c.tags||[]).map(t=>`<span class="chip a">${esc(t)}</span>`).join('')}</td></tr>`).join('')+
+    `</tbody></table></div>` : '<p class="muted">No records.</p>';
+  const ro = readOnly || e.status==='Attended';
+  $('verifyModal').querySelector('.good').style.display = ro?'none':'';
+  $('verifyModal').querySelector('.warn').style.display = ro?'none':'';
+  show('verifyModal');
+}
+function approveData(){
+  if(backendEnabled()){ closeModal('verifyModal'); commit('candidates.approve',{eventId:verifyId,assignee_email:assigneeEmail}).catch(err=>alert('Approval failed: '+err.message)); return; }
+  const e=events.find(x=>x.id===verifyId); const staged=pend.filter(p=>p.eventId===verifyId); staged.forEach(p=>{p.verified=true;cands.push(p);}); pend=pend.filter(p=>p.eventId!==verifyId); e.status='Attended'; e.awaitingActual=true;
+  save(LS.cands,cands); save(LS.pend,pend); save(LS.events,events); closeModal('verifyModal'); renderAll(); ackEmail(e.id); alert(staged.length+' records approved and published to the community. Event → Attended. An acknowledgement email requesting the actual footfall has been prepared for the Assignee.');
+}
+// ---------- actual footfall (post-Attended, via email reply) ----------
+function ackEmail(id){
+  const e=events.find(x=>x.id===id);
+  if(!assigneeEmail){ alert('Set the Assignee email in the top bar to send the footfall acknowledgement.'); return; }
+  const subj=`[CIEL HR] Confirm actual footfall — ${e.name}`;
+  const body=`Hi,\n\nThe data for "${e.name}" (${e.date}) has been verified and the event is now marked ATTENDED.\n\nPlease REPLY to this email with a single number — the ACTUAL total footfall / attendees at this event. It will be recorded against the event.\n\nEstimated footfall was ${fmtNum(e.est)}.\n\nRegards,\nCIEL HR Events Team\n${FROM_EMAIL}`;
+  window.open(`mailto:${encodeURIComponent(assigneeEmail)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank');
+  e.ackSent=true; save(LS.events,events);
+}
+let actualId=null;
+function openActual(id){ actualId=id; const e=events.find(x=>x.id===id); $('ac_evt').innerHTML=`<b>${esc(e.name)}</b> · estimated footfall ${fmtNum(e.est)}${e.ackSent?' · acknowledgement sent':''}`; $('ac_val').value=e.actual!=null?e.actual:''; show('actualModal'); }
+function saveActual(){
+  const v=parseInt($('ac_val').value); if(isNaN(v)){ alert('Enter a number.'); return; }
+  if(backendEnabled()){ closeModal('actualModal'); commit('event.actual',{id:actualId,actual:v}).catch(err=>alert('Footfall update failed: '+err.message)); return; }
+  const e=events.find(x=>x.id===actualId); e.actual=v; e.awaitingActual=false; save(LS.events,events); closeModal('actualModal'); renderAll(); if(!$('tab-analytics').classList.contains('hide')) renderAnalytics();
+}
+function rejectData(){
+  if(backendEnabled()){ closeModal('verifyModal'); commit('candidates.reject',{eventId:verifyId}).catch(err=>alert('Reject failed: '+err.message)); return; }
+  const e=events.find(x=>x.id===verifyId); pend=pend.filter(p=>p.eventId!==verifyId); e.status='Registered'; save(LS.pend,pend); save(LS.events,events); closeModal('verifyModal'); renderAll(); alert('Submission rejected and cleared. Event returned to Registered for re-submission.');
+}
+
+// ---------- community tab ----------
+function renderCommunity(){
+  const regions=[...new Set(cands.map(c=>c.region).filter(Boolean))].sort();
+  const skills=[...new Set(cands.flatMap(c=>c.skills||[]).filter(Boolean))].sort();
+  const sectors=[...new Set(cands.map(c=>c.sector).filter(Boolean))].sort();
+  fillSel('cRegion',regions,'All regions'); fillSel('cSkill',skills,'All skills'); fillSel('cSector',sectors,'All sectors');
+  const fR=$('cRegion').value, fSk=$('cSkill').value, fSec=$('cSector').value, fExp=$('cExp').value, fT=$('cTag').value.toLowerCase();
+  const inExp=(y)=>{ if(!fExp) return true; if(fExp==='0-2')return y<=2; if(fExp==='3-5')return y>=3&&y<=5; if(fExp==='6-10')return y>=6&&y<=10; return y>10; };
+  const rows=cands.filter(c=>{
+    if(fR&&c.region!==fR) return false;
+    if(fSk&&!(c.skills||[]).includes(fSk)) return false;
+    if(fSec&&c.sector!==fSec) return false;
+    if(!inExp(c.exp)) return false;
+    if(fT&&!((c.tags||[]).join(' ')+(c.skills||[]).join(' ')).toLowerCase().includes(fT)) return false;
+    return true;
+  });
+  window._segment=rows;
+  $('segSummary').innerHTML=`<b>${rows.length}</b> of ${cands.length} verified candidates in segment`;
+  $('commBody').innerHTML = rows.length? rows.map(c=>`<tr>
+    <td><b>${esc(c.name)}</b></td><td>${esc(c.region)}</td>
+    <td>${skillChips(c.skills)}</td>
+    <td>${c.exp} yr</td><td>${esc(c.sector)}</td>
+    <td>${(c.tags||[]).map(t=>`<span class="chip a">${esc(t)}</span>`).join('')}</td>
+    <td class="muted">${esc(c.email||'')}<br>${esc(c.phone||'')}</td>
+    <td class="muted">${esc(c.source||'')}</td></tr>`).join('')
+    : `<tr><td colspan="8" class="empty">No verified candidates yet. Approve a submission in the Verification tab, or use Manual upload.</td></tr>`;
+  updateStats();
+}
+function fillSel(id,arr,label){ const s=$(id); const cur=s.value; s.innerHTML=`<option value="">${label}</option>`+arr.map(v=>`<option ${v===cur?'selected':''}>${esc(v)}</option>`).join(''); }
+function runCampaign(kind){
+  const seg=window._segment||[]; if(!seg.length){ alert('No candidates in current segment.'); return; }
+  if(kind==='email'){
+    const emails=seg.map(c=>c.email).filter(Boolean); if(!emails.length){ alert('No emails in segment.'); return; }
+    window.open(`mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent('Opportunities with CIEL HR')}&body=${encodeURIComponent('Hi,\n\nBased on your profile we have relevant openings. Reply to know more.\n\n— CIEL HR Talent Team')}`,'_blank');
+  } else {
+    const first=seg.find(c=>c.phone); if(!first){ alert('No phone numbers in segment.'); return; }
+    alert('WhatsApp opens one chat at a time. Opening the first of '+seg.filter(c=>c.phone).length+' candidates. Use a WhatsApp Business/API connector for true bulk send.');
+    window.open(`https://wa.me/${first.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi! CIEL HR has openings matching your profile. Interested? Reply YES.')}`,'_blank');
+  }
+}
+
+// ---------- analytics ----------
+let chart=null;
+function renderAnalytics(){
+  const byCat={};
+  events.forEach(e=>{ const k=e.category; (byCat[k]=byCat[k]||[]).push(e); });
+  const rows=Object.keys(byCat).map(k=>{
+    const arr=byCat[k];
+    const ests=arr.map(e=>e.est).filter(v=>v!=null);
+    const acts=arr.map(e=>e.actual).filter(v=>v!=null);
+    const avgEst=ests.length?Math.round(ests.reduce((a,b)=>a+b,0)/ests.length):null;
+    const avgAct=acts.length?Math.round(acts.reduce((a,b)=>a+b,0)/acts.length):null;
+    const real=(avgEst&&avgAct)?Math.round(avgAct/avgEst*100):null;
+    return {k, n:arr.length, avgEst, avgAct, real};
+  }).sort((a,b)=>(b.avgAct||0)-(a.avgAct||0) || (b.avgEst||0)-(a.avgEst||0));
+  $('anBody').innerHTML=rows.map(r=>`<tr>
+    <td><span class="chip p">${esc(r.k)}</span></td><td>${r.n}</td>
+    <td>${fmtNum(r.avgEst)}</td><td>${fmtNum(r.avgAct)}</td>
+    <td>${r.real!=null?`<b style="color:${r.real>=100?'var(--green)':r.real>=70?'var(--amber)':'var(--red)'}">${r.real}%</b>`:'<span class="muted">awaiting actuals</span>'}</td>
+  </tr>`).join('');
+  const labels=rows.map(r=>r.k.replace(/ (Job )?Fairs?$/,'').slice(0,26));
+  const est=rows.map(r=>r.avgEst||0), act=rows.map(r=>r.avgAct||0);
+  if(chart) chart.destroy();
+  chart=new Chart($('footChart'),{ type:'bar',
+    data:{ labels, datasets:[
+      {label:'Avg estimated footfall', data:est, backgroundColor:'#9db8ff'},
+      {label:'Avg actual footfall', data:act, backgroundColor:'#128a5b'} ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true, title:{display:true,text:'Attendees'} }, x:{ ticks:{maxRotation:60,minRotation:30,font:{size:10}} } } }
+  });
+}
+
+// ---------- tabs / modal / data ----------
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  ['events','assignments','verify','community','analytics'].forEach(x=>$('tab-'+x).classList.toggle('hide',x!==t));
+  if(t==='assignments') renderAssignments();
+  if(t==='verify') renderVerify();
+  if(t==='community') renderCommunity();
+  if(t==='analytics') renderAnalytics();
+}
+function show(id){ $(id).classList.add('show'); }
+function closeModal(id){ $(id).classList.remove('show'); }
+function renderAll(){ renderEvents(); renderAssignments(); renderVerify(); renderCommunity(); }
+function exportJSON(){ const blob=new Blob([JSON.stringify({events,cands,pend},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cielhr-jobfair-data.json'; a.click(); }
+function importJSONPrompt(){
+  if(backendEnabled()){ alert('Import is intentionally disabled while the shared backend is connected, to avoid overwriting Google Sheet data accidentally. Disconnect to local mode if you need to inspect/import a backup.'); return; }
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange=()=>{ const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(d.events){events=d.events;save(LS.events,events);} if(d.cands){cands=d.cands;save(LS.cands,cands);} if(d.pend){pend=d.pend;save(LS.pend,pend);} renderAll(); alert('Imported.'); }catch(e){alert('Invalid JSON');} }; r.readAsText(inp.files[0]); }; inp.click();
+}
+function resetSeed(){
+  if(backendEnabled()){ alert('Reset is disabled while the shared backend is connected, so live Google Sheet data cannot be erased accidentally.'); return; }
+  if(!confirm('Reset events to the seeded research list? Verified community is kept.')) return; events=SEED.map(freshEvent); pend=[]; save(LS.events,events); save(LS.pend,pend); renderAll();
+}
+
+initSelects();
+$('role').value=role;
+$('assigneeEmail').value=assigneeEmail;
+renderAll();
+if(backendEnabled()){
+  syncFromBackend().then(startPoll).catch(()=>setConn(false,'connection failed'));
+} else {
+  setConn(null,'local mode');
+}
+</script>
+</body>
+</html>
