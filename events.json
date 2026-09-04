@@ -179,6 +179,20 @@
     "url": "https://hackerx.org/tech-job-fairs/india"
   },
   {
+    "id": "auto-13",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-10-15",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "District Employment Office Gyanpur Bhadohi",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
     "id": "e4",
     "name": "Career Setu BFSI Virtual Job Fair",
     "date": "2026-11-11",
@@ -212,6 +226,20 @@
     "url": "https://hackerx.org/tech-job-fairs/india"
   },
   {
+    "id": "auto-14",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-11-13",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "District Employment Office Gyanpur Bhadohi",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
     "id": "auto-11",
     "name": "Mega Job Drive Vizianagaram",
     "date": "2026-11-27",
@@ -226,6 +254,20 @@
       "Graduates"
     ],
     "url": "https://www.hirist.tech/blog/a-complete-guide-to-it-job-fair-in-india"
+  },
+  {
+    "id": "auto-18",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-11-27",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "Uttar Pradesh Rojgaar Sangam",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
   },
   {
     "id": "e12",
@@ -245,6 +287,34 @@
     "url": "https://ieeereturningmothers.in/career-fair-2026/"
   },
   {
+    "id": "auto-15",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-12-09",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "District Employment Office Gyanpur Bhadohi",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-16",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-12-16",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "District Employment Office Gyanpur Bhadohi",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
     "id": "auto-5",
     "name": "HackerX Tech Job Fair - Chennai",
     "date": "2026-12-17",
@@ -259,6 +329,20 @@
       "Graduates"
     ],
     "url": "https://hackerx.org/tech-job-fairs/india"
+  },
+  {
+    "id": "auto-17",
+    "name": "Job Fair in Bhadohi (Sant Ravidas Nagar)",
+    "date": "2026-12-22",
+    "region": "Bhadohi (Sant Ravidas Nagar), Uttar Pradesh",
+    "category": "District Employment Exchange Fairs",
+    "org": "District Employment Office Gyanpur Bhadohi",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
   },
   {
     "id": "e9",
