@@ -208,7 +208,7 @@ footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:cente
 
   <!-- ANALYTICS TAB -->
   <section id="tab-analytics" class="hide">
-    <div class="note">Projected vs actual footfall by job-fair category. <b>Realisation %</b> = actual ÷ estimated — higher means the category delivered more than expected. Actuals populate <b>after an event is marked Attended</b> and the Assignee replies with the footfall number on the acknowledgement email. Only events with a recorded actual count are included in realisation.</div>
+    <div class="note">Projected vs actual footfall by job-fair category. <b>Realisation %</b> = actual ÷ estimated — higher means the category delivered more than expected. Actuals populate <b>after an event is marked Attended</b> and the Assignee replies with the footfall number on the acknowledgement email. Where actuals exist, the estimated, actual and realisation figures are calculated only from the same matched events so the comparison stays like-for-like.</div>
     <div class="card"><div class="chart-wrap"><canvas id="footChart"></canvas></div></div>
     <div class="card" style="padding:0; overflow-x:auto; margin-top:12px;">
       <table>
@@ -920,22 +920,51 @@ let chart=null;
 function renderAnalytics(){
   const byCat={};
   events.forEach(e=>{ const k=e.category; (byCat[k]=byCat[k]||[]).push(e); });
+
   const rows=Object.keys(byCat).map(k=>{
     const arr=byCat[k];
-    const ests=arr.map(e=>e.est).filter(v=>v!=null);
-    const acts=arr.map(e=>e.actual).filter(v=>v!=null);
-    const avgEst=ests.length?Math.round(ests.reduce((a,b)=>a+b,0)/ests.length):null;
-    const avgAct=acts.length?Math.round(acts.reduce((a,b)=>a+b,0)/acts.length):null;
-    const real=(avgEst&&avgAct)?Math.round(avgAct/avgEst*100):null;
-    return {k, n:arr.length, avgEst, avgAct, real};
+
+    // Compare actuals only with estimates from those exact same events.
+    const matched=arr.filter(e=>e.est!=null && e.actual!=null);
+
+    const allEsts=arr.map(e=>e.est).filter(v=>v!=null);
+    const matchedEsts=matched.map(e=>e.est);
+    const matchedActs=matched.map(e=>e.actual);
+
+    const avgAllEst=allEsts.length
+      ? Math.round(allEsts.reduce((a,b)=>a+b,0)/allEsts.length)
+      : null;
+
+    const avgMatchedEst=matchedEsts.length
+      ? Math.round(matchedEsts.reduce((a,b)=>a+b,0)/matchedEsts.length)
+      : null;
+
+    const avgAct=matchedActs.length
+      ? Math.round(matchedActs.reduce((a,b)=>a+b,0)/matchedActs.length)
+      : null;
+
+    const matchedEstTotal=matchedEsts.reduce((a,b)=>a+b,0);
+    const matchedActTotal=matchedActs.reduce((a,b)=>a+b,0);
+    const real=matchedEstTotal>0
+      ? Math.round(matchedActTotal/matchedEstTotal*100)
+      : null;
+
+    const avgEst=matched.length ? avgMatchedEst : avgAllEst;
+
+    return {k, n:arr.length, completed:matched.length, avgEst, avgAct, real};
   }).sort((a,b)=>(b.avgAct||0)-(a.avgAct||0) || (b.avgEst||0)-(a.avgEst||0));
+
   $('anBody').innerHTML=rows.map(r=>`<tr>
-    <td><span class="chip p">${esc(r.k)}</span></td><td>${r.n}</td>
+    <td><span class="chip p">${esc(r.k)}</span></td>
+    <td>${r.n}${r.completed?` <span class="muted" style="font-size:10.5px">(${r.completed} with actual)</span>`:''}</td>
     <td>${fmtNum(r.avgEst)}</td><td>${fmtNum(r.avgAct)}</td>
     <td>${r.real!=null?`<b style="color:${r.real>=100?'var(--green)':r.real>=70?'var(--amber)':'var(--red)'}">${r.real}%</b>`:'<span class="muted">awaiting actuals</span>'}</td>
   </tr>`).join('');
+
   const labels=rows.map(r=>r.k.replace(/ (Job )?Fairs?$/,'').slice(0,26));
-  const est=rows.map(r=>r.avgEst||0), act=rows.map(r=>r.avgAct||0);
+  const est=rows.map(r=>r.avgEst||0);
+  const act=rows.map(r=>r.avgAct||0);
+
   if(chart) chart.destroy();
   chart=new Chart($('footChart'),{ type:'bar',
     data:{ labels, datasets:[
