@@ -3,7 +3,8 @@ name: Refresh Job Fair Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 3 * * *"
+    # Every Monday at 9:00 AM IST (03:30 UTC)
+    - cron: "30 3 * * 1"
 
 permissions:
   contents: write
