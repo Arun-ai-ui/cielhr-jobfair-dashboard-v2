@@ -48,6 +48,20 @@
     "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
   },
   {
+    "id": "auto-21",
+    "name": "Job Fair – Don Bosco, Guwahati",
+    "date": "2026-09-16",
+    "region": "Guwahati, Assam",
+    "category": "Skill Sector Councils (SSCs) Job Fairs",
+    "org": "Telecom Sector Skill Council (TSSC)",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://telcojobs.in/jobfairlist.aspx"
+  },
+  {
     "id": "e1",
     "name": "HackerX Tech Job Fair - Mumbai",
     "date": "2026-09-17",
@@ -62,6 +76,20 @@
       "BE /B Tech and Post Graduate"
     ],
     "url": "https://hackerx.org/tech-job-fairs/india/"
+  },
+  {
+    "id": "auto-20",
+    "name": "Kaushal Mahotsav (Rozgar Mela) - Lucknow",
+    "date": "2026-09-17",
+    "region": "Lucknow, Uttar Pradesh",
+    "category": "Skill Sector Councils (SSCs) Job Fairs",
+    "org": "Telecom Sector Skill Council (TSSC)",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "",
+    "est": null,
+    "skills": [],
+    "url": "https://telcojobs.in/jobfairlist.aspx"
   },
   {
     "id": "auto-9",
