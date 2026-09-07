@@ -167,7 +167,7 @@ footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:cente
 
   <!-- ASSIGNMENTS TAB -->
   <section id="tab-assignments" class="hide">
-    <div class="note">Events assigned to members. On assignment, an Email + WhatsApp alert is prepared from <b>events@cielhrgroup.com</b>. After the fair, the member replies on the same email thread with the registration proof, then the filled Excel; those move the event through Registered → Verification Pending → Attended.</div>
+    <div class="note">Events assigned to members. On assignment, the Email alert is sent automatically through the configured CIEL HR Gmail backend; WhatsApp remains available from the Assignments tab. After the fair, the member replies on the same email thread with the registration proof, then the filled Excel; those move the event through Registered → Verification Pending → Attended.</div>
     <div class="card" style="padding:0; overflow-x:auto;">
       <table>
         <thead><tr><th>Event</th><th>Date</th><th>Member (no login)</th><th>Alert</th><th>Notified</th><th>Status &amp; next step</th></tr></thead>
@@ -263,7 +263,7 @@ footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:cente
     <div class="field"><label>Member name</label><input id="am_name" placeholder="e.g. Priya Nair"></div>
     <div class="field"><label>Member email</label><input id="am_email" placeholder="priya@cielhr.com"></div>
     <div class="field"><label>Member WhatsApp (with country code)</label><input id="am_phone" placeholder="9198XXXXXXXX"></div>
-    <p class="muted" style="font-size:11.5px">On save, status → Assigned and an Email + WhatsApp alert is prepared from events@cielhrgroup.com.</p>
+    <p class="muted" style="font-size:11.5px">On save, status → Assigned and the Email alert is sent automatically through the configured CIEL HR Gmail backend. WhatsApp remains available from the Assignments tab.</p>
     <div class="right"><button onclick="closeModal('assignModal')">Cancel</button><button class="primary" onclick="saveAssign()">Assign &amp; alert</button></div>
   </div>
 </div>
@@ -321,6 +321,88 @@ const FROM_EMAIL = 'events@cielhrgroup.com';
 // ---------- GitHub Pages event catalogue ----------
 const EVENTS_JSON_URL = './events.json';
 let remoteCatalog = null;
+
+// ---------- Gmail notification backend ----------
+// Kept separate from the optional shared Google Sheet backend below.
+// The URL/token are stored only in this browser's localStorage, not in GitHub.
+const MAIL_CFG = {
+  url: 'cielhr_mail_webapp_url_v2',
+  token: 'cielhr_mail_api_token_v2'
+};
+let mailCfg = {
+  url: localStorage.getItem(MAIL_CFG.url) || '',
+  token: localStorage.getItem(MAIL_CFG.token) || ''
+};
+
+function mailBackendReady(){
+  return !!(mailCfg.url && mailCfg.token);
+}
+
+function ensureMailBackendConfig(){
+  if(mailBackendReady()) return true;
+
+  const url = prompt(
+    'Paste the Gmail Apps Script Web App URL (the one ending in /exec).\n\nThis is saved only in this browser.'
+  );
+  if(!url) return false;
+
+  const token = prompt(
+    'Paste the Gmail backend API token.\n\nThis is saved only in this browser and is NOT written to GitHub.'
+  );
+  if(!token) return false;
+
+  mailCfg = { url: url.trim(), token: token.trim() };
+  localStorage.setItem(MAIL_CFG.url, mailCfg.url);
+  localStorage.setItem(MAIL_CFG.token, mailCfg.token);
+  return true;
+}
+
+function clearMailBackendConfig(){
+  mailCfg = {url:'', token:''};
+  localStorage.removeItem(MAIL_CFG.url);
+  localStorage.removeItem(MAIL_CFG.token);
+}
+
+async function sendAssignmentEmailViaGmail(e){
+  const a = e && e.member;
+  if(!a || !a.email) throw new Error('Member email is required.');
+
+  if(!ensureMailBackendConfig()){
+    throw new Error('Gmail backend was not configured.');
+  }
+
+  const params = new URLSearchParams({
+    action: 'sendEmail',
+    token: mailCfg.token,
+    recipient: a.email,
+    recipientName: a.name || 'Team Member',
+    eventName: e.name || 'Job Fair',
+    eventDate: e.date || '',
+    location: e.region || '',
+    category: e.category || '',
+    organizer: e.org || '',
+    format: e.fmt || '',
+    fee: e.fee || '',
+    registrationDeadline: e.regClose || '',
+    eventUrl: e.url || ''
+  });
+
+  const url = mailCfg.url.replace(/\?+$/,'') + '?' + params.toString();
+
+  // Apps Script Web Apps may not expose CORS headers to GitHub Pages.
+  // no-cors still sends the request; the delivery itself is handled server-side.
+  try{
+    await fetch(url, {method:'GET', mode:'no-cors', cache:'no-store'});
+  }catch(err){
+    clearMailBackendConfig();
+    throw new Error('Could not contact the Gmail backend. Re-check the Web App URL and token.');
+  }
+
+  e.notifiedEmail = true;
+  save(LS.events, events);
+  renderAssignments();
+  return true;
+}
 
 // ---------- optional shared backend ----------
 const CFG = { url:'cielhr_backend_url_v2', token:'cielhr_backend_token_v2' };
@@ -606,20 +688,49 @@ async function saveAssign(){
     return;
   }
   e.member=m; e.status='Assigned'; save(LS.events,events); renderAll();
-  alertEmail(e.id,true); alert('Assigned. Email draft opened from '+FROM_EMAIL+'. Open the Assignments tab to also send the WhatsApp alert.'); switchTab('assignments');
+
+  if(m.email){
+    try{
+      await alertEmail(e.id,true);
+      alert('Assigned successfully. The email alert was sent automatically through your work Gmail backend. Open the Assignments tab to also send the WhatsApp alert.');
+    }catch(err){
+      alert('Assigned successfully, but the email alert could not be sent: '+err.message+'\n\nYou can use Re-alert from the Assignments tab after fixing the Gmail backend settings.');
+    }
+  }else{
+    alert('Assigned successfully. No member email was entered, so no email alert was sent.');
+  }
+
+  switchTab('assignments');
 }
 
 // ---------- alerts ----------
-function alertEmail(id, silent){
+async function alertEmail(id, silent){
   const e=events.find(x=>x.id===id); const a=e&&e.member;
-  if(!a||!a.email){ if(!silent) alert('Add member email first (Assign).'); return; }
-  if(backendEnabled()){
-    commit('event.realert',{id}).then(()=>{ if(!silent) alert('Email alert sent through the connected backend.'); }).catch(err=>alert('Email alert failed: '+err.message)); return;
+
+  if(!a||!a.email){
+    if(!silent) alert('Add member email first (Assign).');
+    throw new Error('Member email is missing.');
   }
-  const subj=`[CIEL HR] Please attend: ${e.name} (${e.date})`;
-  const body=`Hi ${a.name},\n\nYou are assigned to represent CIEL HR at this hiring event:\n\nEvent: ${e.name}\nDate: ${e.date}\nLocation: ${e.region}\nCategory: ${e.category}\nFormat: ${e.fmt}\nOrganiser: ${e.org}\nParticipation fee: ${e.fee}\nRegister by: ${e.regClose}\nEstimated footfall: ${fmtNum(e.est)}\nExpected skill-sets: ${(e.skills||[]).join(', ')}\nDetails: ${e.url}\n\nNEXT STEPS (reply on THIS email thread):\n1. After registering, reply with a screenshot / copy of the registration form.\n2. We will then send you the Excel data template.\n3. After the fair, reply with the filled Excel of candidates and the actual attendee count.\n\nRegards,\nCIEL HR Events Team\n${FROM_EMAIL}`;
-  window.open(`mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank');
-  e.notifiedEmail=true; save(LS.events,events); renderAssignments();
+
+  if(backendEnabled()){
+    try{
+      await commit('event.realert',{id});
+      if(!silent) alert('Email alert sent through the connected shared backend.');
+      return true;
+    }catch(err){
+      if(!silent) alert('Email alert failed: '+err.message);
+      throw err;
+    }
+  }
+
+  try{
+    await sendAssignmentEmailViaGmail(e);
+    if(!silent) alert('Email alert sent automatically through your work Gmail backend.');
+    return true;
+  }catch(err){
+    if(!silent) alert('Email alert failed: '+err.message);
+    throw err;
+  }
 }
 function alertWa(id){
   const e=events.find(x=>x.id===id); const a=e&&e.member; if(!a||!a.phone){ alert('Add member WhatsApp number first (Assign).'); return; }
@@ -627,7 +738,7 @@ function alertWa(id){
   window.open(`https://wa.me/${a.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   e.notifiedWa=true; if(!backendEnabled()) save(LS.events,events); renderAssignments();
 }
-function reAlert(id){ alertEmail(id); }
+function reAlert(id){ alertEmail(id).catch(()=>{}); }
 
 // ---------- status transitions ----------
 function markRegistered(id){
@@ -701,7 +812,7 @@ function renderAssignments(){
       <td>${esc(e.date)}</td>
       <td>${esc(a.name)}<br><span class="muted">${esc(a.email||'')} ${a.phone?'· '+esc(a.phone):''}</span></td>
       <td class="row-actions">
-        <button class="small" onclick="alertEmail('${e.id}')">✉ Email</button>
+        <button class="small" onclick="alertEmail('${e.id}').catch(()=>{})">✉ Email</button>
         <button class="small" onclick="alertWa('${e.id}')">🟢 WhatsApp</button>
       </td>
       <td>${e.notifiedEmail?'<span class="chip g">Email ✓</span>':''}${e.notifiedWa?'<span class="chip g">WA ✓</span>':''}${!e.notifiedEmail&&!e.notifiedWa?'<span class="muted">—</span>':''}</td>
