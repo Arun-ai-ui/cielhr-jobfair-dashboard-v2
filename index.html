@@ -452,15 +452,59 @@ function disconnectBackend(){
   loadPublicEventCatalogue();
 }
 
-async function workflowGet(action, extra={}){
-  if(!mailBackendReady()) throw new Error('Apps Script backend is not configured.');
-  const params=new URLSearchParams({action,token:mailCfg.token,...extra});
-  const url=mailCfg.url.replace(/\?+$/,'')+'?'+params.toString();
-  const r=await fetch(url,{method:'GET',cache:'no-store'});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  const data=await r.json();
-  if(!data || data.success===false) throw new Error((data&&data.error)||'Backend request failed.');
-  return data;
+function workflowGet(action, extra={}){
+  if(!mailBackendReady()) return Promise.reject(new Error('Apps Script backend is not configured.'));
+
+  // Use JSONP instead of fetch(). Apps Script ContentService responses are
+  // cross-origin from GitHub Pages and may be blocked by browser CORS rules.
+  return new Promise((resolve,reject)=>{
+    const callback='__cielhrJsonp_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const params=new URLSearchParams({
+      action,
+      token:mailCfg.token,
+      ...extra,
+      callback
+    });
+    const url=mailCfg.url.replace(/\?+$/,'')+'?'+params.toString();
+    const script=document.createElement('script');
+    let finished=false;
+
+    const cleanup=()=>{
+      if(script.parentNode) script.parentNode.removeChild(script);
+      try{ delete window[callback]; }catch(_){ window[callback]=undefined; }
+    };
+
+    const timer=setTimeout(()=>{
+      if(finished) return;
+      finished=true;
+      cleanup();
+      reject(new Error('Backend request timed out.'));
+    },15000);
+
+    window[callback]=(data)=>{
+      if(finished) return;
+      finished=true;
+      clearTimeout(timer);
+      cleanup();
+      if(!data || data.success===false){
+        reject(new Error((data&&data.error)||'Backend request failed.'));
+        return;
+      }
+      resolve(data);
+    };
+
+    script.onerror=()=>{
+      if(finished) return;
+      finished=true;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error('Could not load the Apps Script backend response.'));
+    };
+
+    script.src=url;
+    script.async=true;
+    document.head.appendChild(script);
+  });
 }
 
 function findEventForAssignment(a){
