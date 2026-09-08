@@ -518,6 +518,19 @@ function findEventForAssignment(a){
   return events.find(x=>String(x.name||'').trim().toLowerCase()===n) || null;
 }
 
+// Normalisers used by the Gmail + Drive workflow sync.
+const num = x => {
+  const n = parseFloat(x);
+  return isNaN(n) ? null : n;
+};
+
+const splitList = x => Array.isArray(x)
+  ? x
+  : String(x == null ? '' : x)
+      .split(/[;|]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
 function backendCandidateToLocal(r,eventId,eventName){
   return {
     id:r.id||('c'+Math.random().toString(36).slice(2)),
