@@ -558,24 +558,32 @@ async function syncWorkflowFromBackend(){
     if(a.assignmentEmailSent) e.notifiedEmail=true;
     if(a.actualFootfall!==null && a.actualFootfall!==undefined && a.actualFootfall!=='') e.actual=num(a.actualFootfall);
 
-    const resolution=workflowResolved[e.id];
-    const submissionAt=a.candidateSpreadsheetReceivedAt ? Date.parse(a.candidateSpreadsheetReceivedAt) : 0;
-    const resolvedAt=resolution&&resolution.at ? Date.parse(resolution.at) : 0;
-    if(resolution && submissionAt && submissionAt>resolvedAt){
-      delete workflowResolved[e.id];
-      save(LS.resolved,workflowResolved);
-    }
-    const resolvedNow=!!workflowResolved[e.id];
+    // Keep backend workflow metadata on the event for the Verification UI.
+    e.workflowMeta={
+      registrationProofReceivedAt:a.registrationProofReceivedAt||null,
+      registrationProofFiles:Array.isArray(a.registrationProofFiles)?a.registrationProofFiles:[],
+      toolkitSentAt:a.toolkitSentAt||null,
+      candidateSpreadsheetReceivedAt:a.candidateSpreadsheetReceivedAt||null,
+      candidateSpreadsheetFiles:Array.isArray(a.candidateSpreadsheetFiles)?a.candidateSpreadsheetFiles:[],
+      pendingCandidateCount:num(a.pendingCandidateCount)||0,
+      verificationDecision:a.verificationDecision||null,
+      approvedAt:a.approvedAt||null,
+      rejectedAt:a.rejectedAt||null,
+      approvalEmailSentAt:a.approvalEmailSentAt||null,
+      auditTrail:Array.isArray(a.auditTrail)?a.auditTrail:[]
+    };
 
-    if(!resolvedNow && a.status) e.status=a.status;
+    const resolvedNow=false;
 
-    if(!resolvedNow && a.status==='Verification Pending'){
+    if(a.status) e.status=a.status;
+
+    if(a.status==='Verification Pending'){
       const pd=await workflowGet('getPendingCandidates',{eventId:a.eventId});
       const rows=Array.isArray(pd.candidates)?pd.candidates:[];
       pend=pend.filter(p=>String(p.eventId)!==String(e.id));
       rows.forEach(r=>pend.push(backendCandidateToLocal(r,e.id,e.name)));
       if(pd.actualFootfall!==null && pd.actualFootfall!==undefined && pd.actualFootfall!=='') e.actual=num(pd.actualFootfall);
-    } else if(a.status!=='Verification Pending' && !resolvedNow){
+    } else if(a.status!=='Verification Pending'){
       pend=pend.filter(p=>String(p.eventId)!==String(e.id));
     }
   }
@@ -955,6 +963,35 @@ function renderAssignments(){
   updateStats();
 }
 
+function fmtDateTime(value){
+  if(!value) return '—';
+  const d=new Date(value);
+  if(isNaN(d.getTime())) return esc(value);
+  return d.toLocaleString('en-IN',{
+    year:'numeric',month:'short',day:'2-digit',
+    hour:'2-digit',minute:'2-digit'
+  });
+}
+function fileLinks(files, emptyText='—'){
+  if(!Array.isArray(files)||!files.length) return `<span class="muted">${esc(emptyText)}</span>`;
+  return files.map(f=>`<a href="${esc(f.url||'#')}" target="_blank" rel="noopener">${esc(f.name||'Open file')}</a>`).join('<br>');
+}
+function renderAuditTrail(items){
+  if(!Array.isArray(items)||!items.length) return '<span class="muted">No audit entries yet.</span>';
+  return `<div style="display:grid;gap:6px">`+items.slice().reverse().map(x=>`
+    <div style="padding:7px 9px;border:1px solid var(--border);border-radius:8px">
+      <b>${esc(x.action||'Update')}</b>
+      <span class="muted"> · ${fmtDateTime(x.at)}</span>
+      ${x.detail?`<div class="muted" style="font-size:11px;margin-top:2px">${esc(x.detail)}</div>`:''}
+    </div>`).join('')+`</div>`;
+}
+
+async function workflowDecision(action,eventId,extra={}){
+  const data=await workflowGet(action,{eventId,...extra});
+  await syncWorkflowFromBackend();
+  return data;
+}
+
 // ---------- verification tab ----------
 function renderVerify(){
   const rows=events.filter(e=>e.status==='Verification Pending');
@@ -963,7 +1000,8 @@ function renderVerify(){
     return `<div class="card" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div><b>${esc(e.name)}</b> <span class="muted">· ${esc(e.category)}</span><br>
-        <span class="muted" style="font-size:12px">Member: ${e.member?esc(e.member.name):'—'} · Estimated footfall ${fmtNum(e.est)} · Actual footfall <b>${fmtNum(e.actual)}</b> · ${staged.length} candidate records</span></div>
+        <span class="muted" style="font-size:12px">Member: ${e.member?esc(e.member.name):'—'} · Estimated footfall ${fmtNum(e.est)} · Actual footfall <b>${fmtNum(e.actual)}</b> · ${staged.length} candidate records</span>
+        ${e.workflowMeta?`<div class="muted" style="font-size:11px;margin-top:5px">Submitted ${fmtDateTime(e.workflowMeta.candidateSpreadsheetReceivedAt)} · ${e.workflowMeta.candidateSpreadsheetFiles.length?esc(e.workflowMeta.candidateSpreadsheetFiles[0].name):'candidate file'}</div>`:''}</div>
         <div class="row-actions"><button class="small warn" onclick="openVerify('${e.id}')">Review &amp; verify</button></div>
       </div></div>`;
   }).join('') : `<div class="empty">Nothing awaiting verification.</div>`;
@@ -972,24 +1010,58 @@ let verifyId=null;
 function openVerify(id, readOnly){
   verifyId=id; const e=events.find(x=>x.id===id);
   const staged=(e.status==='Attended') ? cands.filter(c=>c.eventId===id) : pend.filter(p=>p.eventId===id);
+  const meta=e.workflowMeta||{};
   $('vf_evt').innerHTML=`<b>${esc(e.name)}</b> — estimated ${fmtNum(e.est)} vs actual <b>${fmtNum(e.actual)}</b> · ${staged.length} records`;
-  $('vf_body').innerHTML = staged.length? `<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Region</th><th>Skills</th><th>Exp</th><th>Sector</th><th>Tags</th></tr></thead><tbody>`+
+  const evidence=`<div class="card" style="margin-bottom:10px">
+    <b>Submission evidence</b>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:8px;font-size:12px">
+      <div><span class="muted">Registration proof received</span><br>${fmtDateTime(meta.registrationProofReceivedAt)}<br>${fileLinks(meta.registrationProofFiles,'No proof link')}</div>
+      <div><span class="muted">Candidate spreadsheet received</span><br>${fmtDateTime(meta.candidateSpreadsheetReceivedAt)}<br>${fileLinks(meta.candidateSpreadsheetFiles,'No spreadsheet link')}</div>
+    </div>
+  </div>`;
+  const audit=`<div class="card" style="margin-top:10px"><b>Workflow audit trail</b><div style="margin-top:8px">${renderAuditTrail(meta.auditTrail)}</div></div>`;
+  const table=staged.length? `<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Region</th><th>Skills</th><th>Exp</th><th>Sector</th><th>Tags</th></tr></thead><tbody>`+
     staged.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.region)}</td><td>${skillChips(c.skills)}</td><td>${c.exp} yr</td><td>${esc(c.sector)}</td><td>${(c.tags||[]).map(t=>`<span class="chip a">${esc(t)}</span>`).join('')}</td></tr>`).join('')+
     `</tbody></table></div>` : '<p class="muted">No records.</p>';
+  $('vf_body').innerHTML = evidence + table + audit;
   const ro = readOnly || e.status==='Attended';
   $('verifyModal').querySelector('.good').style.display = ro?'none':'';
   $('verifyModal').querySelector('.warn').style.display = ro?'none':'';
   show('verifyModal');
 }
-function approveData(){
-  const e=events.find(x=>x.id===verifyId); const staged=pend.filter(p=>p.eventId===verifyId);
+async function approveData(){
+  const e=events.find(x=>x.id===verifyId);
+  const staged=pend.filter(p=>p.eventId===verifyId);
+  if(!e) return;
+
+  if(mailBackendReady()){
+    try{
+      closeModal('verifyModal');
+      await workflowDecision('approveSubmission',verifyId,{approvedBy:role||'CIEL HR'});
+      staged.forEach(p=>{
+        if(!cands.some(c=>c.id===p.id)){
+          p.verified=true;
+          cands.push(p);
+        }
+      });
+      pend=pend.filter(p=>p.eventId!==verifyId);
+      save(LS.cands,cands);
+      save(LS.pend,pend);
+      renderAll();
+      alert(staged.length+' records approved. Event → Attended. Approval confirmation email sent automatically to the Assignee.');
+    }catch(err){
+      alert('Approval failed: '+err.message);
+      await syncWorkflowFromBackend().catch(()=>{});
+    }
+    return;
+  }
+
   staged.forEach(p=>{p.verified=true;cands.push(p);});
   pend=pend.filter(p=>p.eventId!==verifyId);
   e.status='Attended'; e.awaitingActual=false;
-  workflowResolved[e.id]={type:'approved',at:new Date().toISOString()};
-  save(LS.resolved,workflowResolved); save(LS.cands,cands); save(LS.pend,pend); save(LS.events,events);
+  save(LS.cands,cands); save(LS.pend,pend); save(LS.events,events);
   closeModal('verifyModal'); renderAll();
-  alert(staged.length+' records approved and published to the Community. Event → Attended. Actual footfall remains '+fmtNum(e.actual)+'.');
+  alert(staged.length+' records approved and published to the Community. Event → Attended.');
 }
 // ---------- actual footfall (post-Attended, via email reply) ----------
 function ackEmail(id){
@@ -1007,13 +1079,36 @@ function saveActual(){
   if(backendEnabled()){ closeModal('actualModal'); commit('event.actual',{id:actualId,actual:v}).catch(err=>alert('Footfall update failed: '+err.message)); return; }
   const e=events.find(x=>x.id===actualId); e.actual=v; e.awaitingActual=false; save(LS.events,events); closeModal('actualModal'); renderAll(); if(!$('tab-analytics').classList.contains('hide')) renderAnalytics();
 }
-function rejectData(){
+async function rejectData(){
   const e=events.find(x=>x.id===verifyId);
-  pend=pend.filter(p=>p.eventId!==verifyId); e.status='Registered';
-  workflowResolved[e.id]={type:'rejected',at:new Date().toISOString()};
-  save(LS.resolved,workflowResolved); save(LS.pend,pend); save(LS.events,events);
+  if(!e) return;
+
+  const reason=prompt('Reason for rejection / correction required:','Please correct the candidate data and re-submit the completed CSV with the actual footfall.');
+  if(reason===null) return;
+
+  if(mailBackendReady()){
+    try{
+      closeModal('verifyModal');
+      await workflowDecision('rejectSubmission',verifyId,{
+        rejectedBy:role||'CIEL HR',
+        reason:reason.trim()||'Submission requires correction and re-submission.'
+      });
+      pend=pend.filter(p=>p.eventId!==verifyId);
+      save(LS.pend,pend);
+      renderAll();
+      alert('Submission rejected. The Assignee has been emailed automatically with the correction request.');
+    }catch(err){
+      alert('Rejection failed: '+err.message);
+      await syncWorkflowFromBackend().catch(()=>{});
+    }
+    return;
+  }
+
+  pend=pend.filter(p=>p.eventId!==verifyId);
+  e.status='Registered';
+  save(LS.pend,pend); save(LS.events,events);
   closeModal('verifyModal'); renderAll();
-  alert('Submission rejected locally. Event returned to Registered. A newer email submission will automatically reopen Verification Pending.');
+  alert('Submission rejected locally. Event returned to Registered.');
 }
 
 // ---------- community tab ----------
