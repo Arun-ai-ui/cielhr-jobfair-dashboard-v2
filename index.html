@@ -560,6 +560,7 @@ async function syncWorkflowFromBackend(){
 
     // Keep backend workflow metadata on the event for the Verification UI.
     e.workflowMeta={
+      backendEventId:a.eventId||e.id,
       registrationProofReceivedAt:a.registrationProofReceivedAt||null,
       registrationProofFiles:Array.isArray(a.registrationProofFiles)?a.registrationProofFiles:[],
       toolkitSentAt:a.toolkitSentAt||null,
@@ -987,7 +988,14 @@ function renderAuditTrail(items){
 }
 
 async function workflowDecision(action,eventId,extra={}){
-  const data=await workflowGet(action,{eventId,...extra});
+  const e=events.find(x=>x.id===eventId);
+  const backendEventId=(e&&e.workflowMeta&&e.workflowMeta.backendEventId)||eventId;
+  const data=await workflowGet(action,{
+    eventId:backendEventId,
+    eventName:e?e.name:'',
+    eventDate:e?e.date:'',
+    ...extra
+  });
   await syncWorkflowFromBackend();
   return data;
 }
