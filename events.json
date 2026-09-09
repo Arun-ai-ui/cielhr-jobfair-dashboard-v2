@@ -140,6 +140,20 @@
     "url": "https://careerfair.ieee.org"
   },
   {
+    "id": "auto-25",
+    "name": "Virtual IT Professionals Job Fair 2026 – India",
+    "date": "2026-09-25",
+    "region": "India",
+    "category": "NSDC & MSDE Flagship Rozgar Melas",
+    "org": "National Career Service",
+    "fmt": "Virtual",
+    "fee": "On request",
+    "regClose": "2026-09-20",
+    "est": null,
+    "skills": [],
+    "url": "https://ncs.gov.in/virtual-it-fair-2026"
+  },
+  {
     "id": "e3",
     "name": "The Great Chennai Job Fair 2026",
     "date": "2026-09-27",
@@ -219,6 +233,48 @@
     "est": null,
     "skills": [],
     "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-26",
+    "name": "Naukri.com Virtual Career Expo 2026",
+    "date": "2026-10-15",
+    "region": "India",
+    "category": "Media House & Publication Job Fairs",
+    "org": "Naukri.com",
+    "fmt": "Virtual",
+    "fee": "On request",
+    "regClose": "2026-10-01",
+    "est": null,
+    "skills": [],
+    "url": "https://www.naukri.com/virtual-career-expo-2026"
+  },
+  {
+    "id": "auto-22",
+    "name": "National Career Service (NCS) Job Fair 2026 – New Delhi",
+    "date": "2026-10-20",
+    "region": "Delhi",
+    "category": "NSDC & MSDE Flagship Rozgar Melas",
+    "org": "National Career Service, Ministry of Labour & Employment",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "2026-10-15",
+    "est": null,
+    "skills": [],
+    "url": "https://ncs.gov.in/jobfair2026-delhi"
+  },
+  {
+    "id": "auto-23",
+    "name": "Maharashtra Rojgar Mela 2026 – Mumbai",
+    "date": "2026-11-05",
+    "region": "Maharashtra",
+    "category": "District Employment Exchange Fairs",
+    "org": "Maharashtra Employment Exchange",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "2026-10-30",
+    "est": null,
+    "skills": [],
+    "url": "https://employment.maharashtra.gov.in/rojgarmela2026"
   },
   {
     "id": "auto-19",
@@ -310,6 +366,20 @@
     "est": null,
     "skills": [],
     "url": "https://rojgaarsangam.up.gov.in/RojgaarMela"
+  },
+  {
+    "id": "auto-24",
+    "name": "Tamil Nadu Employment Exchange Job Fair 2026 – Chennai",
+    "date": "2026-12-02",
+    "region": "Tamil Nadu",
+    "category": "District Employment Exchange Fairs",
+    "org": "Tamil Nadu Employment Exchange",
+    "fmt": "In-person",
+    "fee": "On request",
+    "regClose": "2026-11-27",
+    "est": null,
+    "skills": [],
+    "url": "https://employment.tn.gov.in/jobfair2026-chennai"
   },
   {
     "id": "e12",
