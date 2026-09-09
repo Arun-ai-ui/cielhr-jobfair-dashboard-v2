@@ -106,6 +106,7 @@ footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:cente
         <button class="small" onclick="importJSONPrompt()">⬆ Import</button>
         <button class="small" onclick="resetSeed()">↺ Reset</button>
         <button class="small" onclick="openBackendSetup()">⚙ Backend</button>
+        <button class="small" id="dataCleanupBtn" onclick="openDataCleanup()">🧹 Data cleanup</button>
       </div>
       <span class="backend-status"><span class="dot" id="connDot"></span><span id="connText">local mode</span></span>
     </div>
@@ -233,6 +234,37 @@ footer { margin-top:20px; color:var(--muted); font-size:11.5px; text-align:cente
     <div class="field"><label>API token</label><input id="cfgToken" placeholder="Matches API_TOKEN in the Apps Script backend"></div>
     <p class="muted" id="cfgMsg" style="font-size:11.5px"></p>
     <div class="right"><button onclick="disconnectBackend()">Use local mode</button><button onclick="closeModal('backendModal')">Cancel</button><button class="primary" onclick="saveBackendCfg()">Connect</button></div>
+  </div>
+</div>
+
+
+<!-- Super Admin data cleanup modal -->
+<div class="modal-bg" id="cleanupModal">
+  <div class="modal">
+    <h3>🧹 Data management</h3>
+    <p class="muted">Super Admin cleanup tools for test/demo data. These actions do not delete the GitHub event catalogue, Apps Script API token, deployment, Gmail trigger or Drive folder structure.</p>
+
+    <div class="card" style="margin:12px 0">
+      <b>Delete demo candidates</b>
+      <p class="muted" style="font-size:11.5px;margin:5px 0 10px">Removes Community records whose name starts with “Demo” or whose tags contain “Demo”.</p>
+      <button class="warn" onclick="deleteDemoCandidates()">Delete demo candidates</button>
+    </div>
+
+    <div class="card" style="margin:12px 0">
+      <b>Reset one event</b>
+      <p class="muted" style="font-size:11.5px;margin:5px 0 8px">Returns one selected event to <b>New</b>, clears its assignee, actual footfall, pending/verified candidates for that event, and removes that event's Gmail + Drive workflow record/files.</p>
+      <select id="cleanupEvent" style="width:100%;margin-bottom:10px"></select>
+      <button class="warn" onclick="resetSelectedEvent()">Reset selected event</button>
+    </div>
+
+    <div class="card" style="margin:12px 0;border-color:#efc8c3">
+      <b style="color:var(--red)">Clear all test workflow data</b>
+      <p class="muted" style="font-size:11.5px;margin:5px 0 10px">Clears all local Community/Pending test records, resets every event to New, removes all Apps Script assignment workflow properties and trashes generated proof/submission/processed files. The event catalogue and system configuration remain intact.</p>
+      <button style="background:var(--red);color:#fff;border-color:var(--red)" onclick="clearAllTestWorkflowData()">Clear all test workflow data</button>
+    </div>
+
+    <p class="muted" id="cleanupMsg" style="font-size:11.5px"></p>
+    <div class="right"><button onclick="closeModal('cleanupModal')">Close</button></div>
   </div>
 </div>
 
@@ -710,8 +742,12 @@ function fmtNum(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('en-
 let sortKey='date', sortDir=1;
 
 // ---------- role ----------
-function setRole(){ role=$('role').value; save(LS.role, role); renderAll(); }
+function setRole(){ role=$('role').value; save(LS.role, role); updateAdminControls(); renderAll(); }
 function canDelete(){ return role==='Super Admin'; }
+function updateAdminControls(){
+  const b=$('dataCleanupBtn');
+  if(b) b.style.display=role==='Super Admin'?'':'none';
+}
 
 // ---------- init selects ----------
 function initSelects(){
@@ -1219,6 +1255,146 @@ function renderAnalytics(){
   });
 }
 
+
+// ---------- Super Admin data management ----------
+function openDataCleanup(){
+  if(role!=='Super Admin'){
+    alert('Data cleanup is available only to Super Admin.');
+    return;
+  }
+
+  const s=$('cleanupEvent');
+  s.innerHTML=events
+    .slice()
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))
+    .map(e=>`<option value="${esc(e.id)}">${esc(e.date||'')} — ${esc(e.name)} — ${esc(e.status||'New')}</option>`)
+    .join('');
+
+  $('cleanupMsg').textContent='';
+  show('cleanupModal');
+}
+
+function deleteDemoCandidates(){
+  if(role!=='Super Admin') return;
+
+  const demo=cands.filter(c=>{
+    const demoName=/^demo\b/i.test(String(c.name||'').trim());
+    const demoTag=(c.tags||[]).some(t=>String(t).trim().toLowerCase()==='demo');
+    return demoName||demoTag;
+  });
+
+  if(!demo.length){
+    alert('No demo candidates were found.');
+    return;
+  }
+
+  const phrase=prompt(
+    `This will permanently remove ${demo.length} demo candidate record(s) from this browser's Community.\n\nType DELETE DEMO to continue:`
+  );
+
+  if(phrase!=='DELETE DEMO') return;
+
+  const demoIds=new Set(demo.map(c=>c.id));
+  cands=cands.filter(c=>!demoIds.has(c.id));
+  save(LS.cands,cands);
+  renderAll();
+
+  $('cleanupMsg').textContent=`Removed ${demo.length} demo candidate record(s).`;
+}
+
+async function resetSelectedEvent(){
+  if(role!=='Super Admin') return;
+
+  const id=$('cleanupEvent').value;
+  const e=events.find(x=>x.id===id);
+  if(!e) return;
+
+  const phrase=prompt(
+    `Reset "${e.name}" to New and remove its workflow/test data?\n\nType RESET EVENT to continue:`
+  );
+
+  if(phrase!=='RESET EVENT') return;
+
+  $('cleanupMsg').textContent='Resetting event…';
+
+  try{
+    if(mailBackendReady()){
+      const backendEventId=(e.workflowMeta&&e.workflowMeta.backendEventId)||e.id;
+      await workflowGet('resetEventWorkflow',{
+        eventId:backendEventId,
+        eventName:e.name||'',
+        eventDate:e.date||''
+      });
+    }
+
+    cands=cands.filter(c=>c.eventId!==e.id && String(c.source||'')!==String(e.name||''));
+    pend=pend.filter(c=>c.eventId!==e.id);
+
+    e.status='New';
+    e.member=null;
+    e.notifiedEmail=false;
+    e.notifiedWa=false;
+    e.actual=null;
+    e.awaitingActual=false;
+    delete e.workflowMeta;
+
+    if(workflowResolved[e.id]){
+      delete workflowResolved[e.id];
+      save(LS.resolved,workflowResolved);
+    }
+
+    save(LS.events,events);
+    save(LS.cands,cands);
+    save(LS.pend,pend);
+
+    renderAll();
+    openDataCleanup();
+    $('cleanupMsg').textContent=`Reset "${e.name}" successfully.`;
+  }catch(err){
+    $('cleanupMsg').textContent='Reset failed: '+err.message;
+  }
+}
+
+async function clearAllTestWorkflowData(){
+  if(role!=='Super Admin') return;
+
+  const phrase=prompt(
+    'This will clear ALL test workflow data and return all events to New.\n\nIt will preserve the event catalogue, API token, Gmail trigger, deployment and Drive folders.\n\nType CLEAR TEST DATA to continue:'
+  );
+
+  if(phrase!=='CLEAR TEST DATA') return;
+
+  $('cleanupMsg').textContent='Clearing test workflow data…';
+
+  try{
+    if(mailBackendReady()){
+      await workflowGet('clearAllTestWorkflowData');
+    }
+
+    cands=[];
+    pend=[];
+    workflowResolved={};
+
+    const source=(remoteCatalog&&remoteCatalog.length)?remoteCatalog:events;
+    events=source.map(e=>{
+      const cleanEvent=freshEvent(e);
+      delete cleanEvent.workflowMeta;
+      return cleanEvent;
+    });
+
+    save(LS.events,events);
+    save(LS.cands,cands);
+    save(LS.pend,pend);
+    save(LS.resolved,workflowResolved);
+
+    renderAll();
+    openDataCleanup();
+    $('cleanupMsg').textContent='All test workflow data cleared successfully.';
+  }catch(err){
+    $('cleanupMsg').textContent='Cleanup failed: '+err.message;
+  }
+}
+
 // ---------- tabs / modal / data ----------
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
@@ -1248,6 +1424,7 @@ function resetSeed(){
 }
 
 initSelects();
+updateAdminControls();
 $('role').value=role;
 $('assigneeEmail').value=assigneeEmail;
 renderAll();
